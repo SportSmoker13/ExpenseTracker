@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
+  try {
   let supabaseResponse = NextResponse.next({ request });
 
   // Safety check for environment variables
@@ -52,6 +53,10 @@ export async function middleware(request: NextRequest) {
   }
 
   return supabaseResponse;
+  } catch (error) {
+    console.error("Middleware Error:", error);
+    return NextResponse.next(); // Or redirect to a custom error page
+  }
 }
 
 export const config = {
