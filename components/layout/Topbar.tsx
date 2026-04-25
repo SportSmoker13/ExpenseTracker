@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NewTransactionSheet } from "@/components/transactions/NewTransactionSheet";
-import type { Category } from "@/lib/types";
+import { ThemeToggle } from "@/components/ThemeToggle";
+import type { Category, Source, Person } from "@/lib/types";
 
 const pageTitles: Record<string, string> = {
   "/": "Dashboard",
@@ -15,9 +16,11 @@ const pageTitles: Record<string, string> = {
 
 interface TopbarProps {
   categories: Category[];
+  sources: Source[];
+  people: Person[];
 }
 
-export function Topbar({ categories }: TopbarProps) {
+export function Topbar({ categories, sources, people }: TopbarProps) {
   const pathname = usePathname();
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -25,24 +28,28 @@ export function Topbar({ categories }: TopbarProps) {
 
   return (
     <>
-      <header className="h-16 px-6 flex items-center justify-between border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-40">
-        <div>
-          <h2 className="text-xl font-semibold text-foreground">{title}</h2>
+      <header className="h-14 px-4 flex items-center justify-between border-b border-border bg-card/60 backdrop-blur-md sticky top-0 z-40">
+        <h1 className="text-lg font-bold tracking-tight text-foreground">{title}</h1>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <Button
+            id="new-transaction-btn"
+            size="sm"
+            onClick={() => setSheetOpen(true)}
+            className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm rounded-full px-4 h-8 text-xs font-semibold"
+          >
+            <Plus className="w-3.5 h-3.5 mr-1" />
+            Add
+          </Button>
         </div>
-        <Button
-          id="new-transaction-btn"
-          onClick={() => setSheetOpen(true)}
-          className="bg-[oklch(0.55_0.22_280)] hover:bg-[oklch(0.6_0.24_280)] text-white shadow-lg shadow-[oklch(0.55_0.22_280)]/25 transition-all duration-200"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          New Transaction
-        </Button>
       </header>
 
       <NewTransactionSheet
         open={sheetOpen}
         onOpenChange={setSheetOpen}
         categories={categories}
+        sources={sources}
+        people={people}
       />
     </>
   );

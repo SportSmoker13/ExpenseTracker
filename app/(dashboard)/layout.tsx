@@ -1,7 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { getCategories } from "@/app/actions/categoryActions";
-import { Sidebar } from "@/components/layout/Sidebar";
+import { getSources } from "@/app/actions/sourceActions";
+import { getPeople } from "@/app/actions/personActions";
+import { BottomNav } from "@/components/layout/BottomNav";
 import { Topbar } from "@/components/layout/Topbar";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -10,17 +12,21 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   if (!user) redirect("/login");
 
-  const categories = await getCategories();
+  const [categories, sources, people] = await Promise.all([
+    getCategories(),
+    getSources(),
+    getPeople(),
+  ]);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      <Sidebar userEmail={user.email} />
+    <div className="flex flex-col h-screen overflow-hidden bg-background">
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Topbar categories={categories} />
-        <main className="flex-1 overflow-y-auto p-6 pb-20 md:pb-6">
+        <Topbar categories={categories} sources={sources} people={people} />
+        <main className="flex-1 overflow-y-auto p-3 pb-24">
           {children}
         </main>
       </div>
+      <BottomNav />
     </div>
   );
 }

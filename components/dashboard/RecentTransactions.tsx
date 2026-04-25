@@ -1,10 +1,10 @@
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import type { Transaction, Category } from "@/lib/types";
+import type { FullTransaction } from "@/lib/types";
 
 interface RecentTransactionsProps {
-  transactions: (Transaction & { category: Category })[];
+  transactions: FullTransaction[];
 }
 
 function formatCurrency(amount: number) {
@@ -19,6 +19,7 @@ const typeConfig = {
   INCOME: { label: "Income", className: "bg-green-500/10 text-green-500 border-green-500/20" },
   EXPENSE: { label: "Expense", className: "bg-red-500/10 text-red-500 border-red-500/20" },
   INVESTMENT: { label: "Invest", className: "bg-purple-500/10 text-purple-500 border-purple-500/20" },
+  TRANSFER: { label: "Pay/Transfer", className: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
 };
 
 export function RecentTransactions({ transactions }: RecentTransactionsProps) {
@@ -40,17 +41,17 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
         return (
           <div
             key={tx.id}
-            className="flex items-center gap-4 p-3 rounded-xl hover:bg-muted/50 transition-colors group"
+            className="flex items-center gap-3 p-2 rounded-xl hover:bg-muted/50 transition-colors group"
           >
-            <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-lg flex-shrink-0">
-              {tx.category.icon ?? "💳"}
+            <div className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center text-base flex-shrink-0">
+              {tx.category?.icon ?? (tx.type === "TRANSFER" ? "🔄" : "💳")}
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-foreground truncate">
-                {tx.description ?? tx.category.name}
+                {tx.description || tx.category?.name || (tx.type === "TRANSFER" ? "Account Payment" : "Uncategorized")}
               </p>
-              <p className="text-xs text-muted-foreground">
-                {tx.category.name} · {format(new Date(tx.date), "MMM d, yyyy")}
+              <p className="text-[10px] text-muted-foreground">
+                {tx.category?.name || "General"} · {format(new Date(tx.date), "MMM d, yy")}
               </p>
             </div>
             <div className="flex flex-col items-end gap-1">

@@ -9,6 +9,14 @@ enum TransactionType {
   INCOME
   EXPENSE
   INVESTMENT
+  TRANSFER
+}
+
+enum SourceType {
+  BANK
+  CREDIT_CARD
+  CASH
+  OTHER
 }
 
 model Category {
@@ -33,13 +41,50 @@ model Transaction {
   type        TransactionType
   description String?
 
-  category   Category @relation(fields: [categoryId], references: [id])
-  categoryId String
+  category   Category? @relation(fields: [categoryId], references: [id])
+  categoryId String?
+
+  source     Source?  @relation("FromSource", fields: [sourceId], references: [id])
+  sourceId   String?
+
+  toSource   Source?  @relation("ToSource", fields: [toSourceId], references: [id])
+  toSourceId String?
+
+  person     Person?  @relation(fields: [personId], references: [id])
+  personId   String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([date])
   @@index([type])
+  @@index([userId])
+}
+
+model Source {
+  id           String          @id @default(cuid())
+  userId       String
+  name         String
+  type         SourceType      @default(BANK)
+  icon         String?
+  balance      Float           @default(0)
+  
+  transactions     Transaction[] @relation("FromSource")
+  toTransactions   Transaction[] @relation("ToSource")
+  
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  @@index([userId])
+}
+
+model Person {
+  id           String          @id @default(cuid())
+  userId       String
+  name         String
+  transactions Transaction[]
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
   @@index([userId])
 }

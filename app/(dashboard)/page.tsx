@@ -1,5 +1,5 @@
 import { getDashboardMetrics } from "@/app/actions/transactionActions";
-import { MetricCards } from "@/components/dashboard/MetricCards";
+import { MetricCards, TotalWealthHero } from "@/components/dashboard/MetricCards";
 import { ExpenseDonut } from "@/components/dashboard/ExpenseDonut";
 import { CashFlowChart } from "@/components/dashboard/CashFlowChart";
 import { RecentTransactions } from "@/components/dashboard/RecentTransactions";
@@ -22,6 +22,8 @@ export default async function DashboardPage() {
         monthlyIncome={metrics.monthlyIncome}
         monthlyExpenses={metrics.monthlyExpenses}
         monthlyInvested={metrics.monthlyInvested}
+        totalLent={metrics.totalLent}
+        totalCardDue={metrics.totalCardDue}
       />
 
       {/* Charts Row */}
@@ -59,6 +61,9 @@ export default async function DashboardPage() {
           <RecentTransactions transactions={metrics.recentTransactions} />
         </CardContent>
       </Card>
+
+      {/* Extreme Bottom: Total Available Wealth */}
+      <TotalWealthHero totalBalance={metrics.totalBalance} />
     </div>
   );
 }

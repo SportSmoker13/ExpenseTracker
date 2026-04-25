@@ -1,7 +1,8 @@
 import { getTransactions } from "@/app/actions/transactionActions";
 import { getCategories } from "@/app/actions/categoryActions";
+import { getSources } from "@/app/actions/sourceActions";
+import { getPeople } from "@/app/actions/personActions";
 import { TransactionTable } from "@/components/transactions/TransactionTable";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -10,22 +11,25 @@ export const metadata: Metadata = {
 };
 
 export default async function TransactionsPage() {
-  const [{ transactions }, categories] = await Promise.all([
+  const [{ transactions }, categories, sources, people] = await Promise.all([
     getTransactions({ pageSize: 500 }),
     getCategories(),
+    getSources(),
+    getPeople(),
   ]);
 
   return (
-    <div className="max-w-7xl mx-auto">
-      <Card className="border-border bg-card shadow-sm">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base font-semibold">All Transactions</CardTitle>
-          <CardDescription>Filter, search, and export your transaction history</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <TransactionTable transactions={transactions} categories={categories} />
-        </CardContent>
-      </Card>
+    <div className="max-w-4xl mx-auto space-y-4 py-2">
+      <div className="px-1">
+        <h2 className="text-xl font-black tracking-tight">History</h2>
+        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest leading-none">Manage your cash flow</p>
+      </div>
+      <TransactionTable 
+        transactions={transactions} 
+        categories={categories}
+        sources={sources}
+        people={people}
+      />
     </div>
   );
 }

@@ -12,7 +12,10 @@ const TransactionSchema = z.object({
   date: z.date(),
   type: z.nativeEnum(TransactionType),
   description: z.string().optional(),
-  categoryId: z.string().min(1, "Category is required"),
+  categoryId: z.preprocess((v) => (v === "" ? null : v), z.string().optional().nullable()),
+  sourceId: z.preprocess((v) => (v === "" ? null : v), z.string().optional().nullable()),
+  toSourceId: z.preprocess((v) => (v === "" ? null : v), z.string().optional().nullable()),
+  personId: z.preprocess((v) => (v === "" ? null : v), z.string().optional().nullable()),
 });
 
 async function getUserId(): Promise<string> {
@@ -29,7 +32,10 @@ export async function addTransaction(data: {
   date: Date;
   type: TransactionType;
   description?: string;
-  categoryId: string;
+  categoryId?: string | null;
+  sourceId?: string | null;
+  toSourceId?: string | null;
+  personId?: string | null;
 }) {
   const userId = await getUserId();
   const parsed = TransactionSchema.parse(data);
@@ -50,7 +56,10 @@ export async function updateTransaction(
     date: Date;
     type: TransactionType;
     description?: string;
-    categoryId: string;
+    categoryId?: string | null;
+    sourceId?: string | null;
+    toSourceId?: string | null;
+    personId?: string | null;
   }
 ) {
   const userId = await getUserId();
@@ -108,7 +117,7 @@ export async function getTransactions(filters?: {
   const [transactions, total] = await Promise.all([
     prisma.transaction.findMany({
       where,
-      include: { category: true },
+      include: { category: true, source: true, toSource: true, person: true },
       orderBy: { date: "desc" },
       skip: (page - 1) * pageSize,
       take: pageSize,
@@ -192,16 +201,41 @@ export async function getDashboardMetrics() {
   // Recent transactions
   const recentTransactions = await prisma.transaction.findMany({
     where: { userId },
-    include: { category: true },
+    include: { category: true, source: true, toSource: true, person: true },
     orderBy: { date: "desc" },
     take: 5,
   });
+
+  // Lending Summary
+  const lentAgg = await prisma.transaction.aggregate({
+    where: { userId, personId: { not: null }, type: "EXPENSE" },
+    _sum: { amount: true },
+  });
+  const borrowedAgg = await prisma.transaction.aggregate({
+    where: { userId, personId: { not: null }, type: "INCOME" },
+    _sum: { amount: true },
+  });
+
+  // Credit Card Due Summary
+  const cardExpenseAgg = await prisma.transaction.aggregate({
+    where: { userId, source: { type: "CREDIT_CARD" } },
+    _sum: { amount: true },
+  });
+  const cardPaymentAgg = await prisma.transaction.aggregate({
+    where: { userId, toSource: { type: "CREDIT_CARD" }, type: "TRANSFER" },
+    _sum: { amount: true },
+  });
+
+  const totalLent = (lentAgg._sum.amount ?? 0) - (borrowedAgg._sum.amount ?? 0);
+  const totalCardDue = (cardExpenseAgg._sum.amount ?? 0) - (cardPaymentAgg._sum.amount ?? 0);
 
   return {
     monthlyIncome,
     monthlyExpenses,
     monthlyInvested,
     totalBalance,
+    totalLent,
+    totalCardDue,
     expensesByCategory: expensesByCategoryFormatted,
     cashFlow,
     recentTransactions,

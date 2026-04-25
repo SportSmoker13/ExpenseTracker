@@ -8,7 +8,7 @@ import { format } from "date-fns";
 import { CalendarIcon, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { TransactionType } from "@/lib/types";
-import type { Category, Transaction } from "@/lib/types";
+import type { Category, Transaction, Source, Person } from "@/lib/types";
 
 import { addTransaction, updateTransaction } from "@/app/actions/transactionActions";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
@@ -23,10 +23,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
 const schema = z.object({
-  amount: z.preprocess((v) => Number(v), z.number().positive("Amount must be positive")),
+  amount: z.coerce.number().positive("Amount must be positive"),
   date: z.date(),
   type: z.nativeEnum(TransactionType),
-  categoryId: z.string().min(1, "Select a category"),
+  categoryId: z.string().nullable().optional(),
+  sourceId: z.string().nullable().optional(),
+  toSourceId: z.string().nullable().optional(),
+  personId: z.string().nullable().optional(),
   description: z.string().optional(),
 });
 
@@ -34,7 +37,10 @@ type FormData = {
   amount: number;
   date: Date;
   type: TransactionType;
-  categoryId: string;
+  categoryId?: string | null;
+  sourceId?: string | null;
+  toSourceId?: string | null;
+  personId?: string | null;
   description?: string;
 };
 
@@ -42,13 +48,17 @@ interface NewTransactionSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   categories: Category[];
-  editTransaction?: Transaction & { category: Category };
+  sources: Source[];
+  people: Person[];
+  editTransaction?: Transaction & { category?: Category | null; source?: Source | null; toSource?: Source | null; person?: Person | null };
 }
 
 export function NewTransactionSheet({
   open,
   onOpenChange,
   categories,
+  sources,
+  people,
   editTransaction,
 }: NewTransactionSheetProps) {
   const [isPending, startTransition] = useTransition();
@@ -72,6 +82,9 @@ export function NewTransactionSheet({
       date: new Date(),
       type: TransactionType.EXPENSE,
       categoryId: "",
+      sourceId: null,
+      toSourceId: null,
+      personId: null,
       description: "",
     },
   });
@@ -84,14 +97,26 @@ export function NewTransactionSheet({
       if (editTransaction) {
         reset({
           amount: editTransaction.amount,
-          date: new Date(editTransaction.date),
+          date: editTransaction.date ? new Date(editTransaction.date) : new Date(),
           type: editTransaction.type,
-          categoryId: editTransaction.categoryId,
-          description: editTransaction.description ?? "",
+          categoryId: editTransaction.categoryId || null,
+          sourceId: editTransaction.sourceId || null,
+          toSourceId: editTransaction.toSourceId || null,
+          personId: editTransaction.personId || null,
+          description: editTransaction.description || "",
         });
         setSelectedType(editTransaction.type);
       } else {
-        reset({ amount: undefined, date: new Date(), type: TransactionType.EXPENSE, categoryId: "", description: "" });
+        reset({ 
+          amount: undefined, 
+          date: new Date(), 
+          type: TransactionType.EXPENSE, 
+          categoryId: null, 
+          sourceId: null, 
+          toSourceId: null, 
+          personId: null, 
+          description: "" 
+        });
         setSelectedType(TransactionType.EXPENSE);
       }
     }
@@ -122,10 +147,11 @@ export function NewTransactionSheet({
     });
   };
 
-  const typeColors: Record<TransactionType, string> = {
+  const typeColors: Record<string, string> = {
     INCOME: "data-[state=active]:bg-green-500 data-[state=active]:text-white",
     EXPENSE: "data-[state=active]:bg-red-500 data-[state=active]:text-white",
     INVESTMENT: "data-[state=active]:bg-purple-500 data-[state=active]:text-white",
+    TRANSFER: "data-[state=active]:bg-blue-600 data-[state=active]:text-white",
   };
 
   return (
@@ -146,15 +172,15 @@ export function NewTransactionSheet({
             <div className="space-y-2">
               <Label>Transaction Type</Label>
               <Tabs value={selectedType} onValueChange={onTypeChange} className="w-full">
-                <TabsList className="w-full grid grid-cols-3 bg-muted">
-                  {[TransactionType.INCOME, TransactionType.EXPENSE, TransactionType.INVESTMENT].map((type) => (
+                <TabsList className="w-full grid grid-cols-4 bg-muted">
+                  {[TransactionType.INCOME, TransactionType.EXPENSE, TransactionType.INVESTMENT, TransactionType.TRANSFER].map((type) => (
                     <TabsTrigger
                       key={type}
                       value={type}
                       className={cn("text-xs font-semibold transition-all", typeColors[type])}
                       id={`type-tab-${type.toLowerCase()}`}
                     >
-                      {type === "INCOME" ? "💰 Income" : type === "EXPENSE" ? "💸 Expense" : "📈 Invest"}
+                      {type === "INCOME" ? "💰 In" : type === "EXPENSE" ? "💸 Out" : type === "INVESTMENT" ? "📈 Inv" : "🔄 Pay"}
                     </TabsTrigger>
                   ))}
                 </TabsList>
@@ -207,40 +233,134 @@ export function NewTransactionSheet({
               {errors.date && <p className="text-xs text-destructive">{errors.date.message}</p>}
             </div>
 
-            {/* Category */}
+            {/* Category - Only for non-transfers */}
+            {selectedType !== "TRANSFER" && (
+              <div className="space-y-2">
+                <Label>Category</Label>
+                <Controller
+                  name="categoryId"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value || ""}
+                      onValueChange={(v) => { if (v) field.onChange(v); }}
+                    >
+                      <SelectTrigger id="tx-category" className="w-full">
+                        <SelectValue placeholder="Select a category">
+                          {field.value && categories.find(c => c.id === field.value)?.name}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        {filteredCategories.length === 0 ? (
+                          <div className="px-4 py-3 text-sm text-muted-foreground text-center">
+                            No categories for this type.
+                          </div>
+                        ) : (
+                          filteredCategories.map((cat) => (
+                            <SelectItem key={cat.id} value={cat.id} textValue={cat.name}>
+                              {cat.icon} {cat.name}
+                            </SelectItem>
+                          ))
+                        )}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.categoryId && <p className="text-xs text-destructive">{errors.categoryId.message}</p>}
+              </div>
+            )}
+            
+            {/* Source - Label changes if transfer */}
             <div className="space-y-2">
-              <Label>Category</Label>
+              <Label>{selectedType === "TRANSFER" ? "From Account (Bank)" : "Source (Bank/Card)"}</Label>
               <Controller
-                name="categoryId"
+                name="sourceId"
                 control={control}
                 render={({ field }) => (
                   <Select
-                    value={field.value}
-                    onValueChange={(v) => { if (v) field.onChange(v); }}
+                    value={field.value || "NONE"}
+                    onValueChange={(v) => { field.onChange(v === "NONE" ? null : v); }}
                   >
-                    <SelectTrigger id="tx-category" className="w-full">
-                      <SelectValue placeholder="Select a category" />
+                    <SelectTrigger id="tx-source" className="w-full">
+                      <SelectValue placeholder="Select account">
+                        {field.value && sources?.find(s => s.id === field.value)?.name}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      {filteredCategories.length === 0 ? (
-                        <div className="px-4 py-3 text-sm text-muted-foreground text-center">
-                          No categories for this type.
-                        </div>
-                      ) : (
-                        filteredCategories.map((cat) => (
-                          <SelectItem key={cat.id} value={cat.id}>
-                            <span className="flex items-center gap-2">
-                              <span>{cat.icon ?? "📁"}</span>
-                              <span>{cat.name}</span>
-                            </span>
-                          </SelectItem>
-                        ))
-                      )}
+                      <SelectItem value="NONE">None / Cash</SelectItem>
+                      {sources
+                        .filter((src) => selectedType !== "TRANSFER" || src.type === "BANK" || src.type === "CASH")
+                        .map((src) => (
+                        <SelectItem key={src.id} value={src.id} textValue={src.name}>
+                          {src.icon ?? "💳"} {src.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 )}
               />
-              {errors.categoryId && <p className="text-xs text-destructive">{errors.categoryId.message}</p>}
+            </div>
+
+            {/* To Source - Only for Transfers */}
+            {selectedType === "TRANSFER" && (
+              <div className="space-y-2">
+                <Label>To Account (Credit Card Bill)</Label>
+                <Controller
+                  name="toSourceId"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value || "NONE"}
+                      onValueChange={(v) => { field.onChange(v === "NONE" ? null : v); }}
+                    >
+                      <SelectTrigger id="tx-tosource" className="w-full">
+                        <SelectValue placeholder="Select destination">
+                          {field.value && sources?.find(s => s.id === field.value)?.name}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="NONE">Select target account</SelectItem>
+                        {sources
+                          .filter((src) => src.type === "CREDIT_CARD")
+                          .map((src) => (
+                          <SelectItem key={src.id} value={src.id} textValue={src.name}>
+                            {src.icon ?? "💳"} {src.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
+            )}
+
+            {/* Person */}
+            <div className="space-y-2">
+              <Label>Lent to / Borrowed from (optional)</Label>
+              <Controller
+                name="personId"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    value={field.value || "NONE"}
+                    onValueChange={(v) => { field.onChange(v === "NONE" ? null : v); }}
+                  >
+                    <SelectTrigger id="tx-person" className="w-full">
+                      <SelectValue placeholder="Select a person">
+                        {field.value && people?.find(p => p.id === field.value)?.name}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="NONE">None</SelectItem>
+                      {people.map((person) => (
+                        <SelectItem key={person.id} value={person.id} textValue={person.name}>
+                          {person.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
             </div>
 
             {/* Description */}
