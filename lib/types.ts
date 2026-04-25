@@ -22,14 +22,32 @@ export const SourceType = {
 };
 
 export type Category = Omit<PrismaCategory, "type"> & { type: TransactionType };
-export type Source = Omit<PrismaSource, "type"> & { type: SourceType };
 export type Person = PrismaPerson;
+
+export type Loan = {
+  id: string;
+  userId: string;
+  name: string;
+  totalAmount: number;
+  startDate: Date | string;
+  sourceId: string;
+  createdAt: Date;
+  updatedAt: Date;
+  source?: Source;
+  transactions?: Transaction[];
+};
+
+export type Source = Omit<PrismaSource, "type"> & { 
+  type: SourceType;
+  loans?: Loan[];
+};
 
 export type Transaction = Omit<PrismaTransaction, "type"> & { 
   type: TransactionType;
   sourceId: string | null;
   toSourceId: string | null;
   personId: string | null;
+  loanId: string | null;
 };
 
 export type FullTransaction = Transaction & { 
@@ -37,4 +55,5 @@ export type FullTransaction = Transaction & {
   source: Source | null;
   toSource: Source | null;
   person: Person | null;
+  loan: Loan | null;
 };

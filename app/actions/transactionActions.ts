@@ -14,8 +14,8 @@ const TransactionSchema = z.object({
   description: z.string().optional(),
   categoryId: z.preprocess((v) => (v === "" ? null : v), z.string().optional().nullable()),
   sourceId: z.preprocess((v) => (v === "" ? null : v), z.string().optional().nullable()),
-  toSourceId: z.preprocess((v) => (v === "" ? null : v), z.string().optional().nullable()),
   personId: z.preprocess((v) => (v === "" ? null : v), z.string().optional().nullable()),
+  loanId: z.preprocess((v) => (v === "" ? null : v), z.string().optional().nullable()),
 });
 
 async function getUserId(): Promise<string> {
@@ -36,6 +36,7 @@ export async function addTransaction(data: {
   sourceId?: string | null;
   toSourceId?: string | null;
   personId?: string | null;
+  loanId?: string | null;
 }) {
   const userId = await getUserId();
   const parsed = TransactionSchema.parse(data);
@@ -60,6 +61,7 @@ export async function updateTransaction(
     sourceId?: string | null;
     toSourceId?: string | null;
     personId?: string | null;
+    loanId?: string | null;
   }
 ) {
   const userId = await getUserId();
@@ -117,7 +119,7 @@ export async function getTransactions(filters?: {
   const [transactions, total] = await Promise.all([
     prisma.transaction.findMany({
       where,
-      include: { category: true, source: true, toSource: true, person: true },
+      include: { category: true, source: true, toSource: true, person: true, loan: true },
       orderBy: { date: "desc" },
       skip: (page - 1) * pageSize,
       take: pageSize,
@@ -201,7 +203,7 @@ export async function getDashboardMetrics() {
   // Recent transactions
   const recentTransactions = await prisma.transaction.findMany({
     where: { userId },
-    include: { category: true, source: true, toSource: true, person: true },
+    include: { category: true, source: true, toSource: true, person: true, loan: true },
     orderBy: { date: "desc" },
     take: 5,
   });
@@ -216,9 +218,9 @@ export async function getDashboardMetrics() {
     _sum: { amount: true },
   });
 
-  // Credit Card Due Summary
+  // Credit Card Due Summary (Transactions + Loan Debt)
   const cardExpenseAgg = await prisma.transaction.aggregate({
-    where: { userId, source: { type: "CREDIT_CARD" } },
+    where: { userId, source: { type: "CREDIT_CARD" }, loanId: null },
     _sum: { amount: true },
   });
   const cardPaymentAgg = await prisma.transaction.aggregate({
@@ -226,8 +228,19 @@ export async function getDashboardMetrics() {
     _sum: { amount: true },
   });
 
+  const cardLoans = await prisma.loan.findMany({
+    where: { userId, source: { type: "CREDIT_CARD" } },
+    include: { transactions: { select: { amount: true } } }
+  });
+
+  let cardLoanDebt = 0;
+  cardLoans.forEach(loan => {
+    const paid = (loan.transactions || []).reduce((acc, tx) => acc + tx.amount, 0);
+    cardLoanDebt += Math.max(0, loan.totalAmount - paid);
+  });
+
   const totalLent = (lentAgg._sum.amount ?? 0) - (borrowedAgg._sum.amount ?? 0);
-  const totalCardDue = (cardExpenseAgg._sum.amount ?? 0) - (cardPaymentAgg._sum.amount ?? 0);
+  const totalCardDue = (cardExpenseAgg._sum.amount ?? 0) - (cardPaymentAgg._sum.amount ?? 0) + cardLoanDebt;
 
   return {
     monthlyIncome,

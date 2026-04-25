@@ -3,8 +3,9 @@
 import { useState, useTransition } from "react";
 import { SourceType } from "@/lib/types";
 import type { Source } from "@/lib/types";
-import { Plus, Trash2, Loader2, Building2, CreditCard, Wallet, Landmark } from "lucide-react";
+import { Plus, Trash2, Loader2, Building2, CreditCard, Wallet, Landmark, History, ArrowDownLeft, ArrowUpRight } from "lucide-react";
 import { toast } from "sonner";
+import { format } from "date-fns";
 
 import { addSource, deleteSource } from "@/app/actions/sourceActions";
 import { Button } from "@/components/ui/button";
@@ -12,8 +13,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useEffect } from "react";
+import { getSourceTransactions } from "@/app/actions/sourceActions";
+
+function formatCurrency(amount: number) {
+  return new Intl.NumberFormat("en-IN", {
+    maximumFractionDigits: 0,
+  }).format(amount);
+}
 
 interface SourceManagerProps {
   sources: Source[];
@@ -30,11 +40,32 @@ export function SourceManager({ sources: initialSources }: SourceManagerProps) {
   const [isPending, startTransition] = useTransition();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [viewSourceId, setViewSourceId] = useState<string | null>(null);
+  const [history, setHistory] = useState<any[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
   const [form, setForm] = useState<{
     name: string;
     type: SourceType;
     icon: string;
   }>({ name: "", type: "BANK" as SourceType, icon: "" });
+
+  const viewSource = initialSources.find(s => s.id === viewSourceId);
+  const ConfigIcon = viewSource ? typeConfig[viewSource.type].icon : Building2;
+
+  useEffect(() => {
+    if (viewSourceId) {
+      setLoadingHistory(true);
+      getSourceTransactions(viewSourceId)
+        .then(setHistory)
+        .catch(err => {
+           console.error(err);
+           toast.error("Failed to load history");
+        })
+        .finally(() => setLoadingHistory(false));
+    } else {
+      setHistory([]);
+    }
+  }, [viewSourceId]);
 
   const handleAdd = () => {
     if (!form.name.trim()) {
@@ -154,7 +185,8 @@ export function SourceManager({ sources: initialSources }: SourceManagerProps) {
               return (
                 <div
                   key={src.id}
-                  className="flex-none w-44 flex flex-col items-center gap-2 p-5 rounded-[2.5rem] bg-card/40 border border-border/40 hover:border-primary/30 transition-all active:scale-[0.98] relative group overflow-hidden text-center shadow-sm"
+                  onClick={() => setViewSourceId(src.id)}
+                  className="flex-none w-44 flex flex-col items-center gap-2 p-5 rounded-[2.5rem] bg-card/40 border border-border/40 hover:border-primary/30 transition-all active:scale-[0.98] relative group overflow-hidden text-center shadow-sm cursor-pointer"
                 >
                   <div className={cn("w-12 h-12 rounded-[1.25rem] flex items-center justify-center text-2xl shadow-xl transition-transform group-hover:scale-110", typeConfig[src.type].color)}>
                     {src.icon ? <span>{src.icon}</span> : <ConfigIcon className="w-6 h-6" />}
@@ -167,12 +199,15 @@ export function SourceManager({ sources: initialSources }: SourceManagerProps) {
                         "text-xs font-black italic",
                         isCreditCard ? "text-red-500" : "text-green-500"
                       )}>
-                        {isCreditCard ? "DUE: " : ""}₹{balanceValue.toLocaleString()}
+                        {isCreditCard ? "DUE: " : ""}₹{formatCurrency(balanceValue)}
                       </p>
                     </div>
                   </div>
                   <button
-                    onClick={() => setDeleteId(src.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeleteId(src.id);
+                    }}
                     className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-full bg-destructive/10 text-destructive opacity-0 group-hover:opacity-100 transition-all active:scale-125"
                     id={`delete-src-${src.id}`}
                   >
@@ -184,6 +219,89 @@ export function SourceManager({ sources: initialSources }: SourceManagerProps) {
           </div>
         )}
       </div>
+
+      {/* Account Transaction History Sheet */}
+      <Sheet open={!!viewSourceId} onOpenChange={(open) => !open && setViewSourceId(null)}>
+        <SheetContent side="right" className="w-full sm:max-w-md bg-card overflow-y-auto no-scrollbar pt-10">
+          <SheetHeader className="mb-6">
+            <div className="flex items-center gap-4 mb-4">
+               <div className={cn(
+                  "w-14 h-14 rounded-2xl flex items-center justify-center shadow-2xl",
+                  typeConfig[viewSource?.type ?? "OTHER"].color
+               )}>
+                  {viewSource?.icon ? <span className="text-2xl">{viewSource.icon}</span> : <ConfigIcon className="w-7 h-7" />}
+               </div>
+               <div>
+                  <SheetTitle className="text-xl font-black uppercase tracking-tight">{viewSource?.name}</SheetTitle>
+                  <SheetDescription className="font-bold flex items-center gap-2">
+                    <History className="w-3.5 h-3.5" /> Account Activity
+                  </SheetDescription>
+               </div>
+            </div>
+            
+            {viewSource && (
+                <div className={cn(
+                  "p-4 rounded-2xl border text-center space-y-1 shadow-sm",
+                  viewSource.type === "CREDIT_CARD" ? "bg-red-500/5 border-red-500/10" : "bg-green-500/5 border-green-500/10"
+                )}>
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50">
+                    {viewSource.type === "CREDIT_CARD" ? "Amount Due" : "Available Balance"}
+                  </p>
+                  <p className={cn("text-2xl font-black italic tabular-nums", viewSource.type === "CREDIT_CARD" ? "text-red-500" : "text-green-500")}>
+                    ₹{formatCurrency((viewSource as any).balance ?? 0)}
+                  </p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest opacity-60">{viewSource.type}</p>
+                </div>
+            )}
+          </SheetHeader>
+
+          <div className="space-y-3">
+             <h4 className="text-[10px] font-black uppercase tracking-widest opacity-40 ml-1">Recent Activity</h4>
+            {loadingHistory ? (
+              <div className="flex flex-col items-center justify-center py-20 opacity-20">
+                <Loader2 className="w-8 h-8 animate-spin mb-4" />
+                <p className="text-xs font-bold uppercase tracking-widest">Loading Records...</p>
+              </div>
+            ) : history.length === 0 ? (
+              <div className="text-center py-20 border-2 border-dashed rounded-[2.5rem] opacity-30">
+                <p className="text-sm font-bold uppercase tracking-widest">No Transactions</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                  {history.map((tx) => {
+                    const isIncoming = tx.type === "INCOME" || tx.toSourceId === viewSourceId;
+                    const isTransfer = tx.type === "TRANSFER";
+                    
+                    return (
+                      <div key={tx.id} className="flex items-center gap-3 p-3 rounded-2xl bg-muted/20 border border-border/10">
+                          <div className={cn(
+                            "w-10 h-10 rounded-xl flex items-center justify-center text-lg",
+                            isIncoming ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"
+                          )}>
+                            {isIncoming ? <ArrowDownLeft className="w-5 h-5" /> : <ArrowUpRight className="w-5 h-5" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-black truncate uppercase leading-none mb-1">
+                               {isTransfer ? (isIncoming ? `From ${tx.source?.name}` : `To ${tx.toSource?.name}`) : (tx.category?.name || "Uncategorized")}
+                            </p>
+                            <p className="text-[9px] font-bold text-muted-foreground leading-none">
+                              {tx.date ? format(new Date(tx.date), "MMM dd, yyyy") : "N/A"}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className={cn("text-xs font-black italic leading-none mb-1", isIncoming ? "text-green-500" : "text-red-500")}>
+                              {isIncoming ? "+" : "-"}₹{formatCurrency(tx.amount)}
+                            </p>
+                            <p className="text-[8px] font-bold text-muted-foreground opacity-40 uppercase leading-none">{tx.type}</p>
+                          </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
 
       {/* Delete confirm */}
       <Dialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>

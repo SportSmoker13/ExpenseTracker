@@ -31,9 +31,41 @@ export async function addPerson(data: { name: string }) {
 
 export async function getPeople() {
   const userId = await getUserId();
-  return prisma.person.findMany({
+  const people = await prisma.person.findMany({
     where: { userId },
+    include: {
+      transactions: {
+        select: {
+          amount: true,
+          type: true,
+        },
+      },
+    },
     orderBy: { name: "asc" },
+  });
+
+  return people.map((p) => {
+    // Balance logic: EXPENSE (Lent) - INCOME (Borrowed/Repaid)
+    // Positive balance = They owe me
+    // Negative balance = I owe them
+    const balance = p.transactions.reduce((acc, tx) => {
+      if (tx.type === "EXPENSE") return acc + tx.amount;
+      if (tx.type === "INCOME") return acc - tx.amount;
+      return acc;
+    }, 0);
+    return { ...p, balance };
+  });
+}
+
+export async function getPersonTransactions(personId: string) {
+  const userId = await getUserId();
+  return prisma.transaction.findMany({
+    where: { personId, userId },
+    include: {
+      category: true,
+      source: true,
+    },
+    orderBy: { date: "desc" },
   });
 }
 

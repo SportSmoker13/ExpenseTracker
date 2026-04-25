@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getCategories } from "@/app/actions/categoryActions";
 import { getSources } from "@/app/actions/sourceActions";
 import { getPeople } from "@/app/actions/personActions";
+import { getLoans } from "@/app/actions/loanActions";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { Topbar } from "@/components/layout/Topbar";
 
@@ -12,16 +13,17 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   if (!user) redirect("/login");
 
-  const [categories, sources, people] = await Promise.all([
+  const [categories, sources, people, loans] = await Promise.all([
     getCategories(),
     getSources(),
     getPeople(),
+    getLoans(),
   ]);
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-background">
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Topbar categories={categories} sources={sources} people={people} />
+        <Topbar categories={categories} sources={sources} people={people} loans={loans as any} />
         <main className="flex-1 overflow-y-auto p-3 pb-24">
           {children}
         </main>

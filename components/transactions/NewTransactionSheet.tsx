@@ -27,9 +27,10 @@ const schema = z.object({
   date: z.date(),
   type: z.nativeEnum(TransactionType),
   categoryId: z.string().nullable().optional(),
-  sourceId: z.string().nullable().optional(),
+  sourceId: z.string().min(1, "Please select an account"),
   toSourceId: z.string().nullable().optional(),
   personId: z.string().nullable().optional(),
+  loanId: z.string().nullable().optional(),
   description: z.string().optional(),
 });
 
@@ -41,6 +42,7 @@ type FormData = {
   sourceId?: string | null;
   toSourceId?: string | null;
   personId?: string | null;
+  loanId?: string | null;
   description?: string;
 };
 
@@ -50,7 +52,9 @@ interface NewTransactionSheetProps {
   categories: Category[];
   sources: Source[];
   people: Person[];
-  editTransaction?: Transaction & { category?: Category | null; source?: Source | null; toSource?: Source | null; person?: Person | null };
+  loans: Loan[];
+  initialData?: Partial<FormData>;
+  editTransaction?: Transaction & { category?: Category | null; source?: Source | null; toSource?: Source | null; person?: Person | null; loan?: Loan | null };
 }
 
 export function NewTransactionSheet({
@@ -59,6 +63,8 @@ export function NewTransactionSheet({
   categories,
   sources,
   people,
+  loans,
+  initialData,
   editTransaction,
 }: NewTransactionSheetProps) {
   const [isPending, startTransition] = useTransition();
@@ -82,9 +88,10 @@ export function NewTransactionSheet({
       date: new Date(),
       type: TransactionType.EXPENSE,
       categoryId: "",
-      sourceId: null,
+      sourceId: "",
       toSourceId: null,
       personId: null,
+      loanId: null,
       description: "",
     },
   });
@@ -103,21 +110,23 @@ export function NewTransactionSheet({
           sourceId: editTransaction.sourceId || null,
           toSourceId: editTransaction.toSourceId || null,
           personId: editTransaction.personId || null,
+          loanId: editTransaction.loanId || null,
           description: editTransaction.description || "",
         });
         setSelectedType(editTransaction.type);
       } else {
         reset({ 
-          amount: undefined, 
-          date: new Date(), 
-          type: TransactionType.EXPENSE, 
-          categoryId: null, 
-          sourceId: null, 
-          toSourceId: null, 
-          personId: null, 
-          description: "" 
+          amount: initialData?.amount ?? undefined, 
+          date: initialData?.date ?? new Date(), 
+          type: initialData?.type ?? TransactionType.EXPENSE, 
+          categoryId: initialData?.categoryId ?? null, 
+          sourceId: initialData?.sourceId ?? "", 
+          toSourceId: initialData?.toSourceId ?? null, 
+          personId: initialData?.personId ?? null, 
+          loanId: initialData?.loanId ?? null,
+          description: initialData?.description ?? "" 
         });
-        setSelectedType(TransactionType.EXPENSE);
+        setSelectedType(initialData?.type ?? TransactionType.EXPENSE);
       }
     }
   }, [open, editTransaction, reset]);
@@ -283,22 +292,29 @@ export function NewTransactionSheet({
                   >
                     <SelectTrigger id="tx-source" className="w-full">
                       <SelectValue placeholder="Select account">
-                        {field.value && sources?.find(s => s.id === field.value)?.name}
+                        {(() => {
+                          const s = sources?.find(s => s.id === field.value);
+                          return s ? `${s.name} - ${s.type}` : "Select account";
+                        })()}
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="NONE">None / Cash</SelectItem>
                       {sources
                         .filter((src) => selectedType !== "TRANSFER" || src.type === "BANK" || src.type === "CASH")
                         .map((src) => (
-                        <SelectItem key={src.id} value={src.id} textValue={src.name}>
-                          {src.icon ?? "💳"} {src.name}
+                        <SelectItem key={src.id} value={src.id} textValue={`${src.name} - ${src.type}`}>
+                          <div className="flex items-center gap-2">
+                            <span>{src.icon ?? "💳"}</span>
+                            <span>{src.name}</span>
+                            <span className="text-[10px] opacity-40 font-bold uppercase ml-auto">({src.type})</span>
+                          </div>
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 )}
               />
+              {errors.sourceId && <p className="text-xs text-destructive">{errors.sourceId.message}</p>}
             </div>
 
             {/* To Source - Only for Transfers */}
@@ -315,7 +331,10 @@ export function NewTransactionSheet({
                     >
                       <SelectTrigger id="tx-tosource" className="w-full">
                         <SelectValue placeholder="Select destination">
-                          {field.value && sources?.find(s => s.id === field.value)?.name}
+                          {(() => {
+                            const s = sources?.find(s => s.id === field.value);
+                            return s ? `${s.name} - ${s.type}` : null;
+                          })()}
                         </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
@@ -323,8 +342,12 @@ export function NewTransactionSheet({
                         {sources
                           .filter((src) => src.type === "CREDIT_CARD")
                           .map((src) => (
-                          <SelectItem key={src.id} value={src.id} textValue={src.name}>
-                            {src.icon ?? "💳"} {src.name}
+                          <SelectItem key={src.id} value={src.id} textValue={`${src.name} - ${src.type}`}>
+                            <div className="flex items-center gap-2">
+                              <span>{src.icon ?? "💳"}</span>
+                              <span>{src.name}</span>
+                              <span className="text-[10px] opacity-40 font-bold uppercase ml-auto">({src.type})</span>
+                            </div>
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -355,6 +378,35 @@ export function NewTransactionSheet({
                       {people.map((person) => (
                         <SelectItem key={person.id} value={person.id} textValue={person.name}>
                           {person.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+
+            {/* Loan Tagging */}
+            <div className="space-y-2">
+              <Label>Tag to Loan (optional)</Label>
+              <Controller
+                name="loanId"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    value={field.value || "NONE"}
+                    onValueChange={(v) => { field.onChange(v === "NONE" ? null : v); }}
+                  >
+                    <SelectTrigger id="tx-loan" className="w-full">
+                      <SelectValue placeholder="Select a loan">
+                        {field.value && loans?.find(l => l.id === field.value)?.name}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="NONE">None</SelectItem>
+                      {loans.map((loan) => (
+                        <SelectItem key={loan.id} value={loan.id} textValue={loan.name}>
+                          {loan.name} (₹{loan.totalAmount.toLocaleString()})
                         </SelectItem>
                       ))}
                     </SelectContent>

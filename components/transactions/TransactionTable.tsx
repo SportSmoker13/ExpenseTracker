@@ -28,6 +28,7 @@ interface TransactionTableProps {
   categories: Category[];
   sources: Source[];
   people: Person[];
+  loans: Loan[];
 }
 
 function formatCurrency(amount: number) {
@@ -45,7 +46,7 @@ const typeConfig = {
   TRANSFER: { label: "Pay/Transfer", className: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
 };
 
-export function TransactionTable({ transactions, categories, sources, people }: TransactionTableProps) {
+export function TransactionTable({ transactions, categories, sources, people, loans }: TransactionTableProps) {
   const [isPending, startTransition] = useTransition();
   const [editTx, setEditTx] = useState<FullTransaction | null>(null);
   const [deleteTxId, setDeleteTxId] = useState<string | null>(null);
@@ -212,6 +213,7 @@ export function TransactionTable({ transactions, categories, sources, people }: 
         categories={categories}
         sources={sources}
         people={people}
+        loans={loans}
         editTransaction={editTx ?? undefined}
       />
 

@@ -4,6 +4,8 @@ import { getPeople } from "@/app/actions/personActions";
 import { CategoryManager } from "@/components/categories/CategoryManager";
 import { SourceManager } from "@/components/sources/SourceManager";
 import { PersonManager } from "@/components/people/PersonManager";
+import { LoanManager } from "@/components/loans/LoanManager";
+import { getLoans } from "@/app/actions/loanActions";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -12,10 +14,11 @@ export const metadata: Metadata = {
 };
 
 export default async function CategoriesPage() {
-  const [categories, sources, people] = await Promise.all([
+  const [categories, sources, people, loans] = await Promise.all([
     getCategories(),
     getSourceSummaries(),
     getPeople(),
+    getLoans(),
   ]);
 
   return (
@@ -48,7 +51,18 @@ export default async function CategoriesPage() {
           <div className="h-4 w-1 rounded-full bg-orange-500 shadow-[0_0_10px_oklch(0.65_0.22_40)]" />
           <h2 className="text-sm font-black tracking-tight uppercase opacity-80">People</h2>
         </div>
-        <PersonManager people={people} />
+        <PersonManager people={people} categories={categories} sources={sources} />
+      </section>
+
+      <div className="h-px w-full bg-border/20" />
+
+      {/* Loans Section */}
+      <section className="space-y-1 animate-in fade-in slide-in-from-bottom-4 duration-1000 px-1">
+        <div className="flex items-center gap-2 mb-0.5">
+          <div className="h-4 w-1 rounded-full bg-indigo-500 shadow-[0_0_10px_oklch(0.5_0.2_280)]" />
+          <h2 className="text-sm font-black tracking-tight uppercase opacity-80">Loans & EMIs</h2>
+        </div>
+        <LoanManager loans={loans as any} sources={sources} categories={categories} />
       </section>
     </div>
   );

@@ -65,13 +65,23 @@ export async function getSourceSummaries() {
   const userId = await getUserId();
   const sources = await prisma.source.findMany({
     where: { userId },
+    include: {
+      loans: {
+        include: {
+          transactions: {
+            select: { amount: true }
+          }
+        }
+      }
+    }
   });
 
   const summaries = await Promise.all(
     sources.map(async (src) => {
-      // Amount spent/out from this source
+      // Amount spent/out from this source 
+      // Important: Exclude transactions tagged to loans to avoid double-counting debt
       const outAgg = await prisma.transaction.aggregate({
-        where: { userId, sourceId: src.id, NOT: { type: "INCOME" } },
+        where: { userId, sourceId: src.id, NOT: { type: "INCOME" }, loanId: null },
         _sum: { amount: true },
       });
 
@@ -89,10 +99,21 @@ export async function getSourceSummaries() {
 
       const totalOut = outAgg._sum.amount ?? 0;
       const totalIn = inAgg._sum.amount ?? 0;
+      
+      // Calculate remaining loan debt for this source
+      let loanDebt = 0;
+      if (src.type === "CREDIT_CARD") {
+        src.loans.forEach(loan => {
+          const paid = (loan.transactions || []).reduce((acc, tx) => acc + tx.amount, 0);
+          loanDebt += Math.max(0, loan.totalAmount - paid);
+        });
+      }
 
-      // For Banks: Balance = In - Out
-      // For Cards: Due = Out - In
-      const balance = src.type === "CREDIT_CARD" ? totalOut - totalIn : totalIn - totalOut;
+      // For Banks: Balance = In - Out (External loans don't touch this balance)
+      // For Cards: Due = (Out - In) + LoanDebt
+      const balance = src.type === "CREDIT_CARD" 
+        ? (totalOut - totalIn) + loanDebt 
+        : totalIn - totalOut;
 
       return {
         ...src,
@@ -102,4 +123,20 @@ export async function getSourceSummaries() {
   );
 
   return summaries;
+}
+
+export async function getSourceTransactions(sourceId: string) {
+  const userId = await getUserId();
+  return prisma.transaction.findMany({
+    where: {
+      userId,
+      OR: [{ sourceId }, { toSourceId: sourceId }],
+    },
+    include: {
+      category: true,
+      source: true,
+      toSource: true,
+    },
+    orderBy: { date: "desc" },
+  });
 }
