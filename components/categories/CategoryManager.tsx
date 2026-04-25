@@ -78,13 +78,13 @@ export function CategoryManager({ categories: initialCategories }: CategoryManag
   };
 
   return (
-    <div className="space-y-10 animate-in fade-in duration-500">
+    <div className="space-y-3 animate-in fade-in duration-500">
       {/* Premium Add Card */}
-      <div className="relative group overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-primary/20 to-primary/5 p-[1px]">
-        <div className="bg-card/40 backdrop-blur-3xl p-6 rounded-[2.5rem] flex items-center justify-between gap-4">
-          <div className="space-y-1">
-            <h3 className="text-lg font-black tracking-tighter">Your Categories</h3>
-            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.2em] opacity-60">Personalize your tracking</p>
+      <div className="relative group overflow-hidden rounded-3xl bg-muted/20 p-[1px]">
+        <div className="bg-card/40 backdrop-blur-3xl p-4 rounded-3xl flex items-center justify-between gap-4">
+          <div className="space-y-0.5">
+            <h3 className="text-sm font-black tracking-tight">Your Categories</h3>
+            <p className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest opacity-40">Personalize your records</p>
           </div>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger
@@ -168,47 +168,47 @@ export function CategoryManager({ categories: initialCategories }: CategoryManag
 
       {/* Categories Groups */}
       {(["INCOME", "EXPENSE", "INVESTMENT"] as TransactionType[]).map((type) => (
-        <div key={type} className="space-y-4">
-          <div className="flex items-end justify-between px-2">
+        <div key={type} className="space-y-2">
+          <div className="flex items-end justify-between px-1">
             <h4 className={cn(
-              "text-[10px] font-black uppercase tracking-[0.3em]",
+              "text-[9px] font-black uppercase tracking-widest",
               type === "INCOME" ? "text-green-500" : type === "EXPENSE" ? "text-red-500" : "text-purple-500"
             )}>
               {typeConfig[type].label}S
             </h4>
-            <span className="text-[10px] font-black text-muted-foreground opacity-40">{grouped[type].length} TOTAL</span>
+            <span className="text-[8px] font-black text-muted-foreground opacity-30">{grouped[type].length} TOTAL</span>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-2">
             {grouped[type].length === 0 ? (
               <div className="bg-muted/10 border border-dashed border-border/50 rounded-[2rem] p-8 text-center">
                 <p className="text-xs text-muted-foreground font-medium italic">No {typeConfig[type].label.toLowerCase()} categories created yet</p>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar -mx-1 px-1">
                 {grouped[type].map((cat) => (
                   <div
                     key={cat.id}
-                    className="flex flex-col items-center gap-3 p-6 rounded-[2.5rem] bg-card/30 border border-border/40 hover:border-primary/30 transition-all active:scale-[0.98] relative group overflow-hidden text-center"
+                    className="flex-none w-36 flex flex-col items-center gap-3 p-5 rounded-[2.5rem] bg-card/40 border border-border/40 hover:border-primary/30 transition-all active:scale-[0.98] relative group overflow-hidden text-center shadow-sm"
                   >
                     <div
-                      className="w-16 h-16 rounded-[1.5rem] flex items-center justify-center text-3xl shadow-2xl transition-transform group-hover:scale-110 group-hover:rotate-3"
+                      className="w-12 h-12 rounded-[1.25rem] flex items-center justify-center text-2xl shadow-xl transition-transform group-hover:scale-110 group-hover:rotate-3"
                       style={{ backgroundColor: `${cat.colorCode}20` }}
                     >
                       {cat.icon ?? "📁"}
                     </div>
-                    <div className="space-y-1 w-full px-2">
-                      <p className="text-sm font-black tracking-tight truncate uppercase">{cat.name}</p>
+                    <div className="space-y-1 w-full px-1">
+                      <p className="text-xs font-black tracking-tight truncate uppercase">{cat.name}</p>
                       <div className="flex justify-center">
-                        <div className="h-1 w-12 rounded-full shadow-lg" style={{ backgroundColor: cat.colorCode, boxShadow: `0 0 10px ${cat.colorCode}60` }} />
+                        <div className="h-0.5 w-8 rounded-full shadow-lg" style={{ backgroundColor: cat.colorCode, boxShadow: `0 0 10px ${cat.colorCode}60` }} />
                       </div>
                     </div>
                     
                     <button
                       onClick={() => setDeleteId(cat.id)}
-                      className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full bg-destructive/10 text-destructive opacity-0 group-hover:opacity-100 transition-all active:scale-125"
+                      className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-full bg-destructive/10 text-destructive opacity-0 group-hover:opacity-100 transition-all active:scale-125"
                     >
-                      <Trash2 className="w-3.5 h-3.5" />
+                      <Trash2 className="w-3 h-3" />
                     </button>
                   </div>
                 ))}
