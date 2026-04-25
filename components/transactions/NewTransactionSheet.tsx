@@ -7,8 +7,8 @@ import { z } from "zod";
 import { format } from "date-fns";
 import { CalendarIcon, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { TransactionType } from "@prisma/client";
-import type { Category, Transaction } from "@prisma/client";
+import { TransactionType } from "@/lib/types";
+import type { Category, Transaction } from "@/lib/types";
 
 import { addTransaction, updateTransaction } from "@/app/actions/transactionActions";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";

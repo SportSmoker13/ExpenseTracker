@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { format } from "date-fns";
 import { Pencil, Trash2, ChevronDown, Filter, X } from "lucide-react";
 import { toast } from "sonner";
-import type { Transaction, Category } from "@prisma/client";
+import type { Transaction, Category, FullTransaction } from "@/lib/types";
 
 import { deleteTransaction } from "@/app/actions/transactionActions";
 import { NewTransactionSheet } from "@/components/transactions/NewTransactionSheet";
@@ -20,7 +20,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import type { DateRange } from "react-day-picker";
 
-type FullTransaction = Transaction & { category: Category };
+// type FullTransaction is now imported from @/lib/types
 
 interface TransactionTableProps {
   transactions: FullTransaction[];
