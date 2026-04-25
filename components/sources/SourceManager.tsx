@@ -123,14 +123,14 @@ export function SourceManager({ sources: initialSources }: SourceManagerProps) {
                   </div>
                 </div>
               </div>
-              <DialogFooter className="gap-2">
-                <Button variant="ghost" className="rounded-2xl h-12 font-bold" onClick={() => setDialogOpen(false)}>CANCEL</Button>
+              <DialogFooter className="flex flex-row gap-2 sm:flex-row sm:space-x-0">
+                <Button variant="ghost" className="flex-1 rounded-2xl h-12 font-bold border border-border/40" onClick={() => setDialogOpen(false)}>CANCEL</Button>
                 <Button
                   onClick={handleAdd}
                   disabled={isPending}
                   className="flex-1 rounded-2xl h-12 bg-primary text-primary-foreground font-black shadow-lg shadow-primary/20"
                 >
-                  {isPending ? "ADDING..." : "SAVE ACCOUNT"}
+                  {isPending ? "OK..." : "SAVE"}
                 </Button>
               </DialogFooter>
             </DialogContent>

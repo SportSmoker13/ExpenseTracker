@@ -84,14 +84,14 @@ export function PersonManager({ people: initialPeople }: PersonManagerProps) {
                   />
                 </div>
               </div>
-              <DialogFooter className="gap-2">
-                <Button variant="ghost" className="rounded-2xl h-12 font-bold" onClick={() => setDialogOpen(false)}>CANCEL</Button>
+              <DialogFooter className="flex flex-row gap-2 sm:flex-row sm:space-x-0">
+                <Button variant="ghost" className="flex-1 rounded-2xl h-12 font-bold border border-border/40" onClick={() => setDialogOpen(false)}>CANCEL</Button>
                 <Button
                   onClick={handleAdd}
                   disabled={isPending}
                   className="flex-1 rounded-2xl h-12 bg-orange-500 text-white font-black shadow-lg shadow-orange-500/20"
                 >
-                  {isPending ? "ADDING..." : "SAVE PERSON"}
+                  {isPending ? "OK..." : "SAVE"}
                 </Button>
               </DialogFooter>
             </DialogContent>

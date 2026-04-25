@@ -135,7 +135,7 @@ export function CategoryManager({ categories: initialCategories }: CategoryManag
                 </div>
                 <div className="space-y-3">
                   <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Choose Accent</Label>
-                  <div className="flex gap-2.5 flex-wrap justify-between bg-muted/20 p-4 rounded-3xl">
+                  <div className="flex gap-2.5 flex-wrap justify-start bg-muted/20 p-4 rounded-3xl">
                     {PRESET_COLORS.map((color) => (
                       <button
                         key={color}
@@ -151,14 +151,14 @@ export function CategoryManager({ categories: initialCategories }: CategoryManag
                   </div>
                 </div>
               </div>
-              <DialogFooter className="gap-2">
-                <Button variant="ghost" className="rounded-2xl h-12 font-bold" onClick={() => setDialogOpen(false)}>CANCEL</Button>
+              <DialogFooter className="flex flex-row gap-2 sm:flex-row sm:space-x-0">
+                <Button variant="ghost" className="flex-1 rounded-2xl h-12 font-bold border border-border/40" onClick={() => setDialogOpen(false)}>CANCEL</Button>
                 <Button
                   onClick={handleAdd}
                   disabled={isPending}
                   className="flex-1 rounded-2xl h-12 bg-primary text-primary-foreground font-black shadow-lg shadow-primary/20"
                 >
-                  {isPending ? "CREATING..." : "SAVE CATEGORY"}
+                  {isPending ? "OK..." : "SAVE"}
                 </Button>
               </DialogFooter>
             </DialogContent>
