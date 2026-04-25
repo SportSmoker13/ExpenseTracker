@@ -1,7 +1,7 @@
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import type { Transaction, Category } from "@prisma/client";
+import type { Transaction, Category } from "@/lib/types";
 
 interface RecentTransactionsProps {
   transactions: (Transaction & { category: Category })[];

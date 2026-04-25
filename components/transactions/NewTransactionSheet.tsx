@@ -147,7 +147,7 @@ export function NewTransactionSheet({
               <Label>Transaction Type</Label>
               <Tabs value={selectedType} onValueChange={onTypeChange} className="w-full">
                 <TabsList className="w-full grid grid-cols-3 bg-muted">
-                  {(["INCOME", "EXPENSE", "INVESTMENT"] as TransactionType[]).map((type) => (
+                  {[TransactionType.INCOME, TransactionType.EXPENSE, TransactionType.INVESTMENT].map((type) => (
                     <TabsTrigger
                       key={type}
                       value={type}

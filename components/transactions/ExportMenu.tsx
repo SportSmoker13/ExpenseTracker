@@ -4,12 +4,12 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { Download, FileText, FileSpreadsheet, File } from "lucide-react";
 import { toast } from "sonner";
-import type { Transaction, Category } from "@prisma/client";
+import type { Transaction, Category, FullTransaction } from "@/lib/types";
 
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
-type FullTransaction = Transaction & { category: Category };
+// FullTransaction is now imported from @/lib/types
 
 interface ExportMenuProps {
   transactions: FullTransaction[];

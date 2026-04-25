@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NewTransactionSheet } from "@/components/transactions/NewTransactionSheet";
-import type { Category } from "@prisma/client";
+import type { Category } from "@/lib/types";
 
 const pageTitles: Record<string, string> = {
   "/": "Dashboard",

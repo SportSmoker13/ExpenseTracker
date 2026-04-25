@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import { format } from "date-fns";
 import { Pencil, Trash2, ChevronDown, Filter, X } from "lucide-react";
 import { toast } from "sonner";
+import { TransactionType } from "@/lib/types";
 import type { Transaction, Category, FullTransaction } from "@/lib/types";
 
 import { deleteTransaction } from "@/app/actions/transactionActions";
@@ -107,9 +108,9 @@ export function TransactionTable({ transactions, categories }: TransactionTableP
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="ALL">All Types</SelectItem>
-            <SelectItem value="INCOME">Income</SelectItem>
-            <SelectItem value="EXPENSE">Expense</SelectItem>
-            <SelectItem value="INVESTMENT">Investment</SelectItem>
+            <SelectItem value={TransactionType.INCOME}>Income</SelectItem>
+            <SelectItem value={TransactionType.EXPENSE}>Expense</SelectItem>
+            <SelectItem value={TransactionType.INVESTMENT}>Investment</SelectItem>
           </SelectContent>
         </Select>
 

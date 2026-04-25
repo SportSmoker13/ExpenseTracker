@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase/server";
-import { TransactionType } from "@prisma/client";
+import { TransactionType } from "@/lib/types";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { startOfMonth, endOfMonth, subMonths, format } from "date-fns";

@@ -1,12 +1,13 @@
 import type { Category as PrismaCategory, Transaction as PrismaTransaction } from "@prisma/client";
 
-export enum TransactionType {
-  INCOME = "INCOME",
-  EXPENSE = "EXPENSE",
-  INVESTMENT = "INVESTMENT",
-}
+export type TransactionType = "INCOME" | "EXPENSE" | "INVESTMENT";
+export const TransactionType = {
+  INCOME: "INCOME" as const,
+  EXPENSE: "EXPENSE" as const,
+  INVESTMENT: "INVESTMENT" as const,
+};
 
-export type Category = PrismaCategory;
-export type Transaction = PrismaTransaction;
+export type Category = Omit<PrismaCategory, "type"> & { type: TransactionType };
+export type Transaction = Omit<PrismaTransaction, "type"> & { type: TransactionType };
 
 export type FullTransaction = Transaction & { category: Category };

@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { TransactionType } from "@prisma/client";
+import { TransactionType } from "@/lib/types";
+import type { Category } from "@/lib/types";
 import { Plus, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import type { Category } from "@prisma/client";
 
 import { addCategory, deleteCategory } from "@/app/actions/categoryActions";
 import { Button } from "@/components/ui/button";
@@ -34,7 +34,12 @@ export function CategoryManager({ categories: initialCategories }: CategoryManag
   const [isPending, startTransition] = useTransition();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [form, setForm] = useState({ name: "", type: "EXPENSE" as TransactionType, colorCode: "#6366f1", icon: "" });
+  const [form, setForm] = useState<{
+    name: string;
+    type: TransactionType;
+    colorCode: string;
+    icon: string;
+  }>({ name: "", type: TransactionType.EXPENSE, colorCode: "#6366f1", icon: "" });
 
   const handleAdd = () => {
     if (!form.name.trim()) {
@@ -46,7 +51,7 @@ export function CategoryManager({ categories: initialCategories }: CategoryManag
         await addCategory(form);
         toast.success("Category created!");
         setDialogOpen(false);
-        setForm({ name: "", type: "EXPENSE", colorCode: "#6366f1", icon: "" });
+        setForm({ name: "", type: TransactionType.EXPENSE, colorCode: "#6366f1", icon: "" });
       } catch (err) {
         toast.error((err as Error).message);
       }
