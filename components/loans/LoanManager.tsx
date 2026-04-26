@@ -29,9 +29,10 @@ interface LoanManagerProps {
   loans: Loan[];
   sources: Source[];
   categories: Category[];
+  investments: any[];
 }
 
-export function LoanManager({ loans: initialLoans, sources, categories }: LoanManagerProps) {
+export function LoanManager({ loans: initialLoans, sources, categories, investments }: LoanManagerProps) {
   const [isPending, startTransition] = useTransition();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -226,7 +227,7 @@ export function LoanManager({ loans: initialLoans, sources, categories }: LoanMa
 
       {/* Loan Details Sheet */}
       <Sheet open={!!viewLoanId} onOpenChange={(open) => !open && setViewLoanId(null)}>
-        <SheetContent side="bottom" className="w-full h-[85vh] rounded-t-[2.5rem] bg-card overflow-y-auto pt-12 border-none">
+        <SheetContent side="bottom" className="w-full max-h-[80vh] rounded-t-[2.5rem] bg-card overflow-y-auto pt-12 border-none">
           <div className="w-12 h-1.5 bg-muted/40 rounded-full mx-auto absolute top-4 left-1/2 -translate-x-1/2" />
           <SheetHeader className="mb-6 px-4">
             <div className="flex items-center gap-4 mb-4">
@@ -305,6 +306,7 @@ export function LoanManager({ loans: initialLoans, sources, categories }: LoanMa
         sources={sources}
         people={[]} // Not needed for loans
         loans={initialLoans}
+        investments={investments}
         initialData={{
            amount: remaining,
            loanId: viewLoan?.id,

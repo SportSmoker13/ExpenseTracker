@@ -54,7 +54,7 @@ export default async function CategoriesPage() {
           <div className="h-4 w-1 rounded-full bg-orange-500 shadow-[0_0_10px_oklch(0.65_0.22_40)]" />
           <h2 className="text-sm font-black tracking-tight uppercase opacity-80">People</h2>
         </div>
-        <PersonManager people={people} categories={categories} sources={sources} />
+        <PersonManager people={people} categories={categories} sources={sources} investments={investments as any} />
       </section>
 
       <div className="h-px w-full bg-border/20" />
@@ -76,7 +76,7 @@ export default async function CategoriesPage() {
           <div className="h-4 w-1 rounded-full bg-indigo-500 shadow-[0_0_10px_oklch(0.5_0.2_280)]" />
           <h2 className="text-sm font-black tracking-tight uppercase opacity-80">Loans & EMIs</h2>
         </div>
-        <LoanManager loans={loans as any} sources={sources} categories={categories} />
+        <LoanManager loans={loans as any} sources={sources} categories={categories} investments={investments as any} />
       </section>
     </div>
   );

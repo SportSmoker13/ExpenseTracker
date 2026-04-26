@@ -176,14 +176,14 @@ export function TransactionTable({ transactions, categories, sources, people, lo
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5 mb-0.5">
                     <p className="text-sm font-bold text-foreground truncate">
-                      {tx.description || tx.category?.name || (tx.type === "TRANSFER" ? "Transfer" : "General")}
+                      {tx.description || tx.category?.name || (tx.type === "TRANSFER" ? `To ${tx.toSource?.name || "Credit Card"}` : "General")}
                     </p>
                     <Badge variant="outline" className={cn("text-[9px] px-1.5 py-0 h-3.5 uppercase font-black tracking-tighter leading-none border-none", config.className)}>
                       {config.label}
                     </Badge>
                   </div>
                   <p className="text-[10px] text-muted-foreground font-medium opacity-60">
-                    {format(new Date(tx.date), "MMM d, yy")} · {tx.category?.name || "Uncategorized"}
+                    {format(new Date(tx.date), "MMM d, yy")} · {tx.type === "TRANSFER" ? `From ${tx.source?.name || "Bank"}` : tx.category?.name || "Uncategorized"}
                   </p>
                 </div>
 

@@ -72,7 +72,7 @@ export function NewTransactionSheet({
   sources,
   people,
   loans,
-  investments,
+  investments = [],
   initialData,
   editTransaction,
 }: NewTransactionSheetProps) {
@@ -143,7 +143,7 @@ export function NewTransactionSheet({
     }
   }, [open, editTransaction, reset]);
 
-  const filteredCategories = categories.filter((c) => c.type === selectedType);
+  const filteredCategories = (categories || []).filter((c) => c.type === selectedType);
 
   const onTypeChange = (type: string) => {
     setSelectedType(type as TransactionType);
@@ -177,7 +177,7 @@ export function NewTransactionSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full h-[92vh] sm:h-[85vh] rounded-t-[2.5rem] overflow-y-auto bg-card border-none pt-10" side="bottom">
+      <SheetContent className="w-full max-h-[80vh] rounded-t-[2.5rem] overflow-y-auto bg-card border-none pt-10" side="bottom">
         <div className="w-12 h-1.5 bg-muted/40 rounded-full mx-auto absolute top-4 left-1/2 -translate-x-1/2" />
         <SheetHeader className="mb-6">
           <SheetTitle className="text-xl font-bold">
@@ -312,7 +312,7 @@ export function NewTransactionSheet({
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      {sources
+                      {sources?
                         .filter((src) => selectedType !== "TRANSFER" || src.type === "BANK" || src.type === "CASH")
                         .map((src) => (
                         <SelectItem key={src.id} value={src.id} textValue={`${src.name} - ${src.type}`}>
@@ -352,7 +352,7 @@ export function NewTransactionSheet({
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="NONE">Select target account</SelectItem>
-                        {sources
+                        {sources?
                           .filter((src) => src.type === "CREDIT_CARD")
                           .map((src) => (
                           <SelectItem key={src.id} value={src.id} textValue={`${src.name} - ${src.type}`}>
@@ -388,7 +388,7 @@ export function NewTransactionSheet({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="NONE">None</SelectItem>
-                      {people.map((person) => (
+                      {(people || []).map((person) => (
                         <SelectItem key={person.id} value={person.id} textValue={person.name}>
                           {person.name}
                         </SelectItem>
@@ -417,7 +417,7 @@ export function NewTransactionSheet({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="NONE">None</SelectItem>
-                      {loans.map((loan) => (
+                      {(loans || []).map((loan) => (
                         <SelectItem key={loan.id} value={loan.id} textValue={loan.name}>
                           {loan.name} (₹{loan.totalAmount.toLocaleString()})
                         </SelectItem>
@@ -446,7 +446,7 @@ export function NewTransactionSheet({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="NONE">None</SelectItem>
-                      {investments.map((inv) => (
+                      {(investments || []).map((inv) => (
                         <SelectItem key={inv.id} value={inv.id} textValue={inv.name}>
                           {inv.name}
                         </SelectItem>

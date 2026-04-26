@@ -179,8 +179,8 @@ export function SourceManager({ sources: initialSources }: SourceManagerProps) {
           <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar -mx-1 px-1">
             {initialSources.map((src) => {
               const ConfigIcon = typeConfig[src.type].icon;
-              const isCreditCard = src.type === "CREDIT_CARD";
               const balanceValue = (src as any).balance ?? 0;
+              const isDebt = balanceValue < 0;
               
               return (
                 <div
@@ -194,12 +194,14 @@ export function SourceManager({ sources: initialSources }: SourceManagerProps) {
                   <div className="space-y-1 w-full px-1">
                     <p className="font-black text-xs tracking-tight truncate uppercase">{src.name}</p>
                     <div className="flex flex-col items-center">
-                      <p className="text-[8px] font-bold text-muted-foreground uppercase opacity-40">{src.type}</p>
+                      <p className="text-[8px] font-bold text-muted-foreground uppercase opacity-40">
+                        {src.type} {src.loans?.length > 0 ? "· LOAN" : ""}
+                      </p>
                       <p className={cn(
                         "text-xs font-black italic",
-                        isCreditCard ? "text-red-500" : "text-green-500"
+                        isDebt ? "text-red-500" : "text-green-500"
                       )}>
-                        {isCreditCard ? "DUE: " : ""}₹{formatCurrency(balanceValue)}
+                        {isDebt ? "-" : ""}₹{formatCurrency(Math.abs(balanceValue))}
                       </p>
                     </div>
                   </div>
@@ -222,7 +224,7 @@ export function SourceManager({ sources: initialSources }: SourceManagerProps) {
 
       {/* Account Transaction History Sheet */}
       <Sheet open={!!viewSourceId} onOpenChange={(open) => !open && setViewSourceId(null)}>
-        <SheetContent side="bottom" className="w-full h-[85vh] rounded-t-[2.5rem] bg-card overflow-y-auto no-scrollbar pt-12 border-none">
+        <SheetContent side="bottom" className="w-full max-h-[80vh] rounded-t-[2.5rem] bg-card overflow-y-auto no-scrollbar pt-12 border-none">
           <div className="w-12 h-1.5 bg-muted/40 rounded-full mx-auto absolute top-4 left-1/2 -translate-x-1/2" />
           <SheetHeader className="mb-6 px-4">
             <div className="flex items-center gap-4 mb-4">
@@ -240,20 +242,23 @@ export function SourceManager({ sources: initialSources }: SourceManagerProps) {
                </div>
             </div>
             
-            {viewSource && (
+            {viewSource && (() => {
+                const balanceValue = (viewSource as any).balance ?? 0;
+                return (
                 <div className={cn(
                   "p-4 rounded-2xl border text-center space-y-1 shadow-sm",
-                  viewSource.type === "CREDIT_CARD" ? "bg-red-500/5 border-red-500/10" : "bg-green-500/5 border-green-500/10"
+                  balanceValue < 0 ? "bg-red-500/5 border-red-500/10" : "bg-green-500/5 border-green-500/10"
                 )}>
                   <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50">
-                    {viewSource.type === "CREDIT_CARD" ? "Amount Due" : "Available Balance"}
+                    {balanceValue < 0 ? "Outstanding Debt" : "Available Balance"}
                   </p>
-                  <p className={cn("text-2xl font-black italic tabular-nums", viewSource.type === "CREDIT_CARD" ? "text-red-500" : "text-green-500")}>
-                    ₹{formatCurrency((viewSource as any).balance ?? 0)}
+                  <p className={cn("text-2xl font-black italic tabular-nums", balanceValue < 0 ? "text-red-500" : "text-green-500")}>
+                    {balanceValue < 0 ? "-" : ""}₹{formatCurrency(Math.abs(balanceValue))}
                   </p>
                   <p className="text-[10px] font-bold uppercase tracking-widest opacity-60">{viewSource.type}</p>
                 </div>
-            )}
+                );
+            })()}
           </SheetHeader>
 
           <div className="space-y-3">

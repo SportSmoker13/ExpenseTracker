@@ -81,7 +81,7 @@ export async function getSourceSummaries() {
       // Amount spent/out from this source 
       // Important: Exclude transactions tagged to loans to avoid double-counting debt
       const outAgg = await prisma.transaction.aggregate({
-        where: { userId, sourceId: src.id, NOT: { type: "INCOME" }, loanId: null },
+        where: { userId, sourceId: src.id, NOT: { type: "INCOME" } },
         _sum: { amount: true },
       });
 
@@ -102,18 +102,17 @@ export async function getSourceSummaries() {
       
       // Calculate remaining loan debt for this source
       let loanDebt = 0;
-      if (src.type === "CREDIT_CARD") {
-        src.loans.forEach(loan => {
-          const paid = (loan.transactions || []).reduce((acc, tx) => acc + tx.amount, 0);
-          loanDebt += Math.max(0, loan.totalAmount - paid);
-        });
-      }
+      src.loans.forEach(loan => {
+        const paid = (loan.transactions || []).reduce((acc, tx) => acc + tx.amount, 0);
+        loanDebt += Math.max(0, loan.totalAmount - paid);
+      });
 
-      // For Banks: Balance = In - Out (External loans don't touch this balance)
-      // For Cards: Due = (Out - In) + LoanDebt
+      // Balance calculation
+      // For Bank/Cash: Balance = totalIn - totalOut
+      // For Credit Cards: Balance = (totalIn - totalOut) - loanDebt
       const balance = src.type === "CREDIT_CARD" 
-        ? (totalOut - totalIn) + loanDebt 
-        : totalIn - totalOut;
+        ? (totalIn - totalOut) - loanDebt
+        : (totalIn - totalOut);
 
       return {
         ...src,

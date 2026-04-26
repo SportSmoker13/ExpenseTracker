@@ -3,6 +3,7 @@ import { MetricCards, TotalWealthHero } from "@/components/dashboard/MetricCards
 import { ExpenseDonut } from "@/components/dashboard/ExpenseDonut";
 import { CashFlowChart } from "@/components/dashboard/CashFlowChart";
 import { RecentTransactions } from "@/components/dashboard/RecentTransactions";
+import { LoanSummaryCard } from "@/components/dashboard/LoanSummaryCard";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import type { Metadata } from "next";
 
@@ -24,6 +25,8 @@ export default async function DashboardPage() {
         monthlyInvested={metrics.monthlyInvested}
         totalLent={metrics.totalLent}
         totalCardDue={metrics.totalCardDue}
+        totalInvested={metrics.totalInvested}
+        liquidCash={metrics.liquidCash}
       />
 
       {/* Charts Row */}
@@ -32,7 +35,7 @@ export default async function DashboardPage() {
         <Card className="lg:col-span-3 border-border bg-card shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold">Cash Flow</CardTitle>
-            <CardDescription>Income vs Expenses over the last 6 months</CardDescription>
+            <CardDescription>Daily liquid cash balance vs expenses for the current month</CardDescription>
           </CardHeader>
           <CardContent>
             <CashFlowChart data={metrics.cashFlow} />
@@ -62,8 +65,11 @@ export default async function DashboardPage() {
         </CardContent>
       </Card>
 
-      {/* Extreme Bottom: Total Available Wealth */}
-      <TotalWealthHero totalBalance={metrics.totalBalance} />
+      {/* Extreme Bottom: Loan Summary */}
+      <LoanSummaryCard 
+        totalLoanAmount={metrics.totalLoanAmount}
+        totalLoanRepaid={metrics.totalLoanRepaid}
+      />
     </div>
   );
 }

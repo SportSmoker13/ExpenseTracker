@@ -37,7 +37,7 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
     <div className="space-y-3">
       {transactions.map((tx) => {
         const config = typeConfig[tx.type];
-        const isExpense = tx.type === "EXPENSE";
+        const isDeduction = tx.type === "EXPENSE" || tx.type === "TRANSFER";
         return (
           <div
             key={tx.id}
@@ -48,18 +48,20 @@ export function RecentTransactions({ transactions }: RecentTransactionsProps) {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-foreground truncate">
-                {tx.description || tx.category?.name || (tx.type === "TRANSFER" ? "Account Payment" : "Uncategorized")}
+                {tx.description || tx.category?.name || (tx.type === "TRANSFER" ? `Paid to ${tx.toSource?.name || "Credit Card"}` : "Uncategorized")}
               </p>
               <p className="text-[10px] text-muted-foreground">
-                {tx.category?.name || "General"} · {format(new Date(tx.date), "MMM d, yy")}
+                {tx.type === "TRANSFER" 
+                  ? `From ${tx.source?.name || "Bank"}`
+                  : tx.category?.name || "General"} · {format(new Date(tx.date), "MMM d, yy")}
               </p>
             </div>
             <div className="flex flex-col items-end gap-1">
               <span className={cn(
                 "text-sm font-semibold",
-                isExpense ? "text-red-500" : tx.type === "INCOME" ? "text-green-500" : "text-purple-500"
+                isDeduction ? "text-red-500" : tx.type === "INCOME" ? "text-green-500" : "text-purple-500"
               )}>
-                {isExpense ? "-" : "+"}{formatCurrency(tx.amount)}
+                {isDeduction ? "-" : "+"}{formatCurrency(tx.amount)}
               </span>
               <Badge variant="outline" className={cn("text-[10px] px-1.5 py-0 h-4", config.className)}>
                 {config.label}

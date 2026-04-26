@@ -14,8 +14,10 @@ const TransactionSchema = z.object({
   description: z.string().optional(),
   categoryId: z.preprocess((v) => (v === "" ? null : v), z.string().optional().nullable()),
   sourceId: z.preprocess((v) => (v === "" ? null : v), z.string().optional().nullable()),
+  toSourceId: z.preprocess((v) => (v === "" ? null : v), z.string().optional().nullable()),
   personId: z.preprocess((v) => (v === "" ? null : v), z.string().optional().nullable()),
   loanId: z.preprocess((v) => (v === "" ? null : v), z.string().optional().nullable()),
+  investmentId: z.preprocess((v) => (v === "" ? null : v), z.string().optional().nullable()),
 });
 
 async function getUserId(): Promise<string> {
@@ -37,6 +39,7 @@ export async function addTransaction(data: {
   toSourceId?: string | null;
   personId?: string | null;
   loanId?: string | null;
+  investmentId?: string | null;
 }) {
   const userId = await getUserId();
   const parsed = TransactionSchema.parse(data);
@@ -47,6 +50,9 @@ export async function addTransaction(data: {
 
   revalidatePath("/");
   revalidatePath("/transactions");
+  revalidatePath("/sources");
+  revalidatePath("/people");
+  revalidatePath("/loans");
   return { success: true, transaction };
 }
 
@@ -62,6 +68,7 @@ export async function updateTransaction(
     toSourceId?: string | null;
     personId?: string | null;
     loanId?: string | null;
+    investmentId?: string | null;
   }
 ) {
   const userId = await getUserId();
@@ -77,6 +84,9 @@ export async function updateTransaction(
 
   revalidatePath("/");
   revalidatePath("/transactions");
+  revalidatePath("/sources");
+  revalidatePath("/people");
+  revalidatePath("/loans");
   return { success: true, transaction };
 }
 
@@ -89,6 +99,9 @@ export async function deleteTransaction(id: string) {
 
   revalidatePath("/");
   revalidatePath("/transactions");
+  revalidatePath("/sources");
+  revalidatePath("/people");
+  revalidatePath("/loans");
   return { success: true };
 }
 
@@ -166,7 +179,7 @@ export async function getDashboardMetrics() {
     _sum: { amount: true },
   });
 
-  const categoryIds = expensesByCategory.map((e) => e.categoryId);
+  const categoryIds = expensesByCategory.map((e) => e.categoryId).filter((id): id is string => id !== null);
   const categories = await prisma.category.findMany({ where: { id: { in: categoryIds } } });
   const categoryMap = Object.fromEntries(categories.map((c) => [c.id, c]));
 
@@ -176,23 +189,80 @@ export async function getDashboardMetrics() {
     amount: e._sum.amount ?? 0,
   }));
 
-  // 6-month cash flow
-  const cashFlow = await Promise.all(
-    Array.from({ length: 6 }, (_, i) => {
-      const date = subMonths(now, 5 - i);
-      const from = startOfMonth(date);
-      const to = endOfMonth(date);
-      const month = format(date, "MMM");
-      return Promise.all([
-        prisma.transaction.aggregate({ where: { userId, type: "INCOME", date: { gte: from, lte: to } }, _sum: { amount: true } }),
-        prisma.transaction.aggregate({ where: { userId, type: "EXPENSE", date: { gte: from, lte: to } }, _sum: { amount: true } }),
-      ]).then(([inc, exp]) => ({
-        month,
-        income: inc._sum.amount ?? 0,
-        expense: exp._sum.amount ?? 0,
-      }));
-    })
-  );
+  // Calculate Liquid Balance at the start of the month
+  const [initialIn, initialOut] = await Promise.all([
+    prisma.transaction.aggregate({
+      where: {
+        userId,
+        date: { lt: monthStart },
+        OR: [
+          { type: "INCOME", source: { type: { in: ["BANK", "CASH"] } } },
+          { type: "TRANSFER", toSource: { type: { in: ["BANK", "CASH"] } } },
+        ],
+      },
+      _sum: { amount: true },
+    }),
+    prisma.transaction.aggregate({
+      where: {
+        userId,
+        date: { lt: monthStart },
+        source: { type: { in: ["BANK", "CASH"] } },
+        NOT: { type: "INCOME" },
+      },
+      _sum: { amount: true },
+    }),
+  ]);
+
+  let runningBalance = (initialIn._sum.amount ?? 0) - (initialOut._sum.amount ?? 0);
+
+  // Daily cash flow for current month
+  const daysInMonth = now.getDate();
+  const cashFlow = [];
+
+  for (let i = 0; i < daysInMonth; i++) {
+    const date = new Date(now.getFullYear(), now.getMonth(), i + 1);
+    const from = new Date(date.setHours(0, 0, 0, 0));
+    const to = new Date(date.setHours(23, 59, 59, 999));
+    const label = format(date, "d MMM");
+
+    const [dayIn, dayOut, dayExpenses] = await Promise.all([
+      // Money into liquid sources
+      prisma.transaction.aggregate({
+        where: {
+          userId,
+          date: { gte: from, lte: to },
+          OR: [
+            { type: "INCOME", source: { type: { in: ["BANK", "CASH"] } } },
+            { type: "TRANSFER", toSource: { type: { in: ["BANK", "CASH"] } } },
+          ],
+        },
+        _sum: { amount: true },
+      }),
+      // Money out of liquid sources
+      prisma.transaction.aggregate({
+        where: {
+          userId,
+          date: { gte: from, lte: to },
+          source: { type: { in: ["BANK", "CASH"] } },
+          NOT: { type: "INCOME" },
+        },
+        _sum: { amount: true },
+      }),
+      // Pure expenses (for the red line)
+      prisma.transaction.aggregate({
+        where: { userId, type: "EXPENSE", date: { gte: from, lte: to } },
+        _sum: { amount: true },
+      }),
+    ]);
+
+    runningBalance += (dayIn._sum.amount ?? 0) - (dayOut._sum.amount ?? 0);
+
+    cashFlow.push({
+      month: label,
+      income: runningBalance, // Mapping balance to 'income' key for green line
+      expense: dayExpenses._sum.amount ?? 0,
+    });
+  }
 
   const monthlyIncome = incomeAgg._sum.amount ?? 0;
   const monthlyExpenses = expenseAgg._sum.amount ?? 0;
@@ -218,29 +288,66 @@ export async function getDashboardMetrics() {
     _sum: { amount: true },
   });
 
-  // Credit Card Due Summary (Transactions + Loan Debt)
-  const cardExpenseAgg = await prisma.transaction.aggregate({
-    where: { userId, source: { type: "CREDIT_CARD" }, loanId: null },
-    _sum: { amount: true },
-  });
-  const cardPaymentAgg = await prisma.transaction.aggregate({
-    where: { userId, toSource: { type: "CREDIT_CARD" }, type: "TRANSFER" },
-    _sum: { amount: true },
+  const totalLent = (lentAgg._sum.amount ?? 0) - (borrowedAgg._sum.amount ?? 0);
+
+  // Unified Liability & Asset Calculation
+  const allSources = await prisma.source.findMany({
+    where: { userId },
+    include: { loans: { include: { transactions: { select: { amount: true } } } } }
   });
 
-  const cardLoans = await prisma.loan.findMany({
-    where: { userId, source: { type: "CREDIT_CARD" } },
+  let liquidCash = 0;
+  let totalCardDue = 0;
+
+  for (const src of allSources) {
+    const [outAgg, inAgg] = await Promise.all([
+      prisma.transaction.aggregate({
+        where: { userId, sourceId: src.id, NOT: { type: "INCOME" } },
+        _sum: { amount: true },
+      }),
+      prisma.transaction.aggregate({
+        where: {
+          userId,
+          OR: [
+            { type: "INCOME", sourceId: src.id },
+            { type: "TRANSFER", toSourceId: src.id },
+          ],
+        },
+        _sum: { amount: true },
+      })
+    ]);
+
+    const totalOut = outAgg._sum.amount ?? 0;
+    const totalIn = inAgg._sum.amount ?? 0;
+    
+    let loanDebt = 0;
+    src.loans.forEach(loan => {
+      const paid = (loan.transactions || []).reduce((acc, tx) => acc + tx.amount, 0);
+      loanDebt += Math.max(0, loan.totalAmount - paid);
+    });
+
+    if (src.type === "BANK" || src.type === "CASH") {
+      liquidCash += (totalIn - totalOut);
+    } else if (src.type === "CREDIT_CARD") {
+      // Balance is (In - Out) - LoanDebt. Negative means debt.
+      const balance = (totalIn - totalOut) - loanDebt;
+      totalCardDue += Math.abs(Math.min(0, balance));
+    }
+  }
+
+  const totalInvested = allInvestment._sum.amount ?? 0;
+
+  const allLoans = await prisma.loan.findMany({
+    where: { userId },
     include: { transactions: { select: { amount: true } } }
   });
 
-  let cardLoanDebt = 0;
-  cardLoans.forEach(loan => {
-    const paid = (loan.transactions || []).reduce((acc, tx) => acc + tx.amount, 0);
-    cardLoanDebt += Math.max(0, loan.totalAmount - paid);
+  let totalLoanAmount = 0;
+  let totalLoanRepaid = 0;
+  allLoans.forEach(loan => {
+    totalLoanAmount += loan.totalAmount;
+    totalLoanRepaid += (loan.transactions || []).reduce((acc, tx) => acc + tx.amount, 0);
   });
-
-  const totalLent = (lentAgg._sum.amount ?? 0) - (borrowedAgg._sum.amount ?? 0);
-  const totalCardDue = (cardExpenseAgg._sum.amount ?? 0) - (cardPaymentAgg._sum.amount ?? 0) + cardLoanDebt;
 
   return {
     monthlyIncome,
@@ -249,6 +356,10 @@ export async function getDashboardMetrics() {
     totalBalance,
     totalLent,
     totalCardDue,
+    totalInvested,
+    liquidCash,
+    totalLoanAmount,
+    totalLoanRepaid,
     expensesByCategory: expensesByCategoryFormatted,
     cashFlow,
     recentTransactions,

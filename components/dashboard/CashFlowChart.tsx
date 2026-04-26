@@ -61,7 +61,7 @@ export function CashFlowChart({ data }: CashFlowChartProps) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           formatter={(value: any, name: any) => [
             formatCurrency(Number(value)),
-            name === "income" ? "Income" : "Expenses",
+            name === "income" ? "Liquid Cash" : "Expenses",
           ]}
           contentStyle={{
             background: "oklch(0.14 0.025 280)",
@@ -74,7 +74,7 @@ export function CashFlowChart({ data }: CashFlowChartProps) {
         <Legend
           formatter={(value) => (
             <span style={{ color: "oklch(0.7 0.05 280)", fontSize: "12px", textTransform: "capitalize" }}>
-              {value === "income" ? "Income" : "Expenses"}
+              {value === "income" ? "Liquid Cash" : "Expenses"}
             </span>
           )}
         />

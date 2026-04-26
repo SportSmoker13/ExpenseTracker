@@ -240,7 +240,7 @@ export function InvestmentManager({ investments: initialInvestments, categories,
 
       {/* Investment History Sheet */}
       <Sheet open={!!viewInvId} onOpenChange={(open) => !open && setViewInvId(null)}>
-        <SheetContent side="bottom" className="w-full h-[85vh] rounded-t-[2.5rem] bg-card overflow-y-auto no-scrollbar pt-12 border-none">
+        <SheetContent side="bottom" className="w-full max-h-[80vh] rounded-t-[2.5rem] bg-card overflow-y-auto no-scrollbar pt-12 border-none">
           <div className="w-12 h-1.5 bg-muted/40 rounded-full mx-auto absolute top-4 left-1/2 -translate-x-1/2" />
           <SheetHeader className="mb-6 px-4">
             <div className="flex items-center gap-4 mb-4">

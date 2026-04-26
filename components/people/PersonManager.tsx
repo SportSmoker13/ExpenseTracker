@@ -30,9 +30,10 @@ interface PersonManagerProps {
   people: PersonWithBalance[];
   categories: Category[];
   sources: Source[];
+  investments: any[];
 }
 
-export function PersonManager({ people: initialPeople, categories, sources }: PersonManagerProps) {
+export function PersonManager({ people: initialPeople, categories, sources, investments }: PersonManagerProps) {
   const [isPending, startTransition] = useTransition();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -196,7 +197,7 @@ export function PersonManager({ people: initialPeople, categories, sources }: Pe
 
       {/* Person Transaction History Sheet */}
       <Sheet open={!!viewPersonId} onOpenChange={(open) => !open && setViewPersonId(null)}>
-        <SheetContent side="bottom" className="w-full h-[85vh] rounded-t-[2.5rem] bg-card overflow-y-auto no-scrollbar pt-12 border-none">
+        <SheetContent side="bottom" className="w-full max-h-[80vh] rounded-t-[2.5rem] bg-card overflow-y-auto no-scrollbar pt-12 border-none">
           <div className="w-12 h-1.5 bg-muted/40 rounded-full mx-auto absolute top-4 left-1/2 -translate-x-1/2" />
           <SheetHeader className="mb-6 px-4">
             <div className="flex items-center gap-4 mb-4">
@@ -288,6 +289,8 @@ export function PersonManager({ people: initialPeople, categories, sources }: Pe
         categories={categories}
         sources={sources}
         people={initialPeople}
+        loans={[]} // Not needed here
+        investments={investments}
         initialData={{
            amount: viewPerson ? Math.abs(viewPerson.balance) : 0,
            personId: viewPerson?.id,

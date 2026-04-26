@@ -10,10 +10,12 @@ interface MetricCardsProps {
   monthlyInvested: number;
   totalLent?: number;
   totalCardDue?: number;
+  totalInvested?: number;
+  liquidCash?: number;
 }
 
 export function MetricCards(props: MetricCardsProps) {
-  const { totalBalance, monthlyIncome, monthlyExpenses, monthlyInvested, totalLent, totalCardDue } = props;
+  const { totalBalance, monthlyIncome, monthlyExpenses, monthlyInvested, totalLent, totalCardDue, totalInvested, liquidCash } = props;
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
@@ -41,25 +43,41 @@ export function MetricCards(props: MetricCardsProps) {
       </div>
 
       {/* 3. Health Summary: Liabilities & Assets */}
-      <div className="bg-secondary/40 rounded-[2.5rem] p-6 border border-border/40 flex gap-6 overflow-x-auto no-scrollbar">
-         <div className="flex-1 min-w-[140px] space-y-3">
+      <div className="bg-secondary/40 rounded-[2.5rem] p-6 border border-border/40 grid grid-cols-2 md:grid-cols-4 gap-6">
+         <div className="space-y-3">
             <div className="flex items-center gap-2">
                <div className="w-2 h-2 rounded-full bg-orange-500 shadow-[0_0_8px_oklch(0.65_0.22_40)]" />
                <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Lent Out</p>
             </div>
             <p className="text-xl font-black text-orange-500">₹{(totalLent ?? 0).toLocaleString()}</p>
-            <p className="text-[10px] font-medium text-muted-foreground leading-tight">Owed to you by friends or family.</p>
+            <p className="text-[10px] font-medium text-muted-foreground leading-tight">Owed to you.</p>
          </div>
 
-         <div className="w-px bg-border/50 self-stretch" />
-
-         <div className="flex-1 min-w-[140px] space-y-3">
+         <div className="space-y-3 border-l border-border/50 pl-6 md:border-l-0 md:pl-0">
             <div className="flex items-center gap-2">
                <div className="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_oklch(0.6_0.22_30)]" />
                <p className="text-[10px] font-black uppercase tracking-widest opacity-60">CC Dues</p>
             </div>
             <p className="text-xl font-black text-rose-500">₹{(totalCardDue ?? 0).toLocaleString()}</p>
-            <p className="text-[10px] font-medium text-muted-foreground leading-tight">Current total credit card liability.</p>
+            <p className="text-[10px] font-medium text-muted-foreground leading-tight">Card liability.</p>
+         </div>
+
+         <div className="space-y-3 border-t border-border/50 pt-6 md:border-t-0 md:pt-0 md:border-l md:pl-6">
+            <div className="flex items-center gap-2">
+               <div className="w-2 h-2 rounded-full bg-indigo-500 shadow-[0_0_8px_oklch(0.55_0.2_280)]" />
+               <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Investment</p>
+            </div>
+            <p className="text-xl font-black text-indigo-500">₹{(totalInvested ?? 0).toLocaleString()}</p>
+            <p className="text-[10px] font-medium text-muted-foreground leading-tight">Total Portfolio.</p>
+         </div>
+
+         <div className="space-y-3 border-t border-border/50 pt-6 border-l border-border/50 pl-6 md:border-t-0 md:pt-0">
+            <div className="flex items-center gap-2">
+               <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_oklch(0.6_0.2_150)]" />
+               <p className="text-[10px] font-black uppercase tracking-widest opacity-60">Liquid Cash</p>
+            </div>
+            <p className="text-xl font-black text-emerald-500">₹{(liquidCash ?? 0).toLocaleString()}</p>
+            <p className="text-[10px] font-medium text-muted-foreground leading-tight">Bank & Cash.</p>
          </div>
       </div>
     </div>
