@@ -6,7 +6,7 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { NewTransactionSheet } from "@/components/transactions/NewTransactionSheet";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import type { Category, Source, Person, Loan } from "@/lib/types";
+import type { Category, Source, Person, Loan, Investment } from "@/lib/types";
 
 const pageTitles: Record<string, string> = {
   "/": "Dashboard",
@@ -19,9 +19,10 @@ interface TopbarProps {
   sources: Source[];
   people: Person[];
   loans: Loan[];
+  investments: Investment[];
 }
 
-export function Topbar({ categories, sources, people, loans }: TopbarProps) {
+export function Topbar({ categories, sources, people, loans, investments }: TopbarProps) {
   const pathname = usePathname();
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -52,6 +53,7 @@ export function Topbar({ categories, sources, people, loans }: TopbarProps) {
         sources={sources}
         people={people}
         loans={loans}
+        investments={investments}
       />
     </>
   );

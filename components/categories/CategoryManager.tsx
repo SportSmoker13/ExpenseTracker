@@ -27,7 +27,6 @@ const PRESET_COLORS = [
 const typeConfig = {
   INCOME: { label: "Income", color: "bg-green-500/10 text-green-500 border-green-500/20" },
   EXPENSE: { label: "Expense", color: "bg-red-500/10 text-red-500 border-red-500/20" },
-  INVESTMENT: { label: "Investment", color: "bg-purple-500/10 text-purple-500 border-purple-500/20" },
 };
 
 export function CategoryManager({ categories: initialCategories }: CategoryManagerProps) {
@@ -74,7 +73,6 @@ export function CategoryManager({ categories: initialCategories }: CategoryManag
   const grouped = {
     INCOME: initialCategories.filter((c) => c.type === "INCOME"),
     EXPENSE: initialCategories.filter((c) => c.type === "EXPENSE"),
-    INVESTMENT: initialCategories.filter((c) => c.type === "INVESTMENT"),
   };
 
   return (
@@ -119,7 +117,6 @@ export function CategoryManager({ categories: initialCategories }: CategoryManag
                       <SelectContent className="rounded-2xl border-none shadow-2xl">
                         <SelectItem value="INCOME">Income</SelectItem>
                         <SelectItem value="EXPENSE">Expense</SelectItem>
-                        <SelectItem value="INVESTMENT">Invest</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -167,7 +164,7 @@ export function CategoryManager({ categories: initialCategories }: CategoryManag
       </div>
 
       {/* Categories Groups */}
-      {(["INCOME", "EXPENSE", "INVESTMENT"] as TransactionType[]).map((type) => (
+      {(["INCOME", "EXPENSE"] as ("INCOME" | "EXPENSE")[]).map((type) => (
         <div key={type} className="space-y-2">
           <div className="flex items-end justify-between px-1">
             <h4 className={cn(

@@ -31,6 +31,7 @@ const schema = z.object({
   toSourceId: z.string().nullable().optional(),
   personId: z.string().nullable().optional(),
   loanId: z.string().nullable().optional(),
+  investmentId: z.string().nullable().optional(),
   description: z.string().optional(),
 });
 
@@ -43,8 +44,14 @@ type FormData = {
   toSourceId?: string | null;
   personId?: string | null;
   loanId?: string | null;
+  investmentId?: string | null;
   description?: string;
 };
+
+interface Investment {
+  id: string;
+  name: string;
+}
 
 interface NewTransactionSheetProps {
   open: boolean;
@@ -53,8 +60,9 @@ interface NewTransactionSheetProps {
   sources: Source[];
   people: Person[];
   loans: Loan[];
+  investments: Investment[];
   initialData?: Partial<FormData>;
-  editTransaction?: Transaction & { category?: Category | null; source?: Source | null; toSource?: Source | null; person?: Person | null; loan?: Loan | null };
+  editTransaction?: Transaction & { category?: Category | null; source?: Source | null; toSource?: Source | null; person?: Person | null; loan?: Loan | null, investment?: Investment | null };
 }
 
 export function NewTransactionSheet({
@@ -64,6 +72,7 @@ export function NewTransactionSheet({
   sources,
   people,
   loans,
+  investments,
   initialData,
   editTransaction,
 }: NewTransactionSheetProps) {
@@ -92,6 +101,7 @@ export function NewTransactionSheet({
       toSourceId: null,
       personId: null,
       loanId: null,
+      investmentId: null,
       description: "",
     },
   });
@@ -111,6 +121,7 @@ export function NewTransactionSheet({
           toSourceId: editTransaction.toSourceId || null,
           personId: editTransaction.personId || null,
           loanId: editTransaction.loanId || null,
+          investmentId: (editTransaction as any).investmentId || null,
           description: editTransaction.description || "",
         });
         setSelectedType(editTransaction.type);
@@ -124,6 +135,7 @@ export function NewTransactionSheet({
           toSourceId: initialData?.toSourceId ?? null, 
           personId: initialData?.personId ?? null, 
           loanId: initialData?.loanId ?? null,
+          investmentId: initialData?.investmentId ?? null,
           description: initialData?.description ?? "" 
         });
         setSelectedType(initialData?.type ?? TransactionType.EXPENSE);
@@ -165,7 +177,8 @@ export function NewTransactionSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full sm:max-w-lg overflow-y-auto bg-card" side="right">
+      <SheetContent className="w-full h-[92vh] sm:h-[85vh] rounded-t-[2.5rem] overflow-y-auto bg-card border-none pt-10" side="bottom">
+        <div className="w-12 h-1.5 bg-muted/40 rounded-full mx-auto absolute top-4 left-1/2 -translate-x-1/2" />
         <SheetHeader className="mb-6">
           <SheetTitle className="text-xl font-bold">
             {editTransaction ? "Edit Transaction" : "New Transaction"}
@@ -407,6 +420,35 @@ export function NewTransactionSheet({
                       {loans.map((loan) => (
                         <SelectItem key={loan.id} value={loan.id} textValue={loan.name}>
                           {loan.name} (₹{loan.totalAmount.toLocaleString()})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </div>
+
+            {/* Investment Portfolio Tagging */}
+            <div className="space-y-2">
+              <Label>Tag to Portfolio (optional)</Label>
+              <Controller
+                name="investmentId"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    value={field.value || "NONE"}
+                    onValueChange={(v) => { field.onChange(v === "NONE" ? null : v); }}
+                  >
+                    <SelectTrigger id="tx-investment" className="w-full">
+                      <SelectValue placeholder="Select a portfolio">
+                        {field.value && investments?.find(i => i.id === field.value)?.name}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="NONE">None</SelectItem>
+                      {investments.map((inv) => (
+                        <SelectItem key={inv.id} value={inv.id} textValue={inv.name}>
+                          {inv.name}
                         </SelectItem>
                       ))}
                     </SelectContent>

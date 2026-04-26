@@ -222,8 +222,9 @@ export function SourceManager({ sources: initialSources }: SourceManagerProps) {
 
       {/* Account Transaction History Sheet */}
       <Sheet open={!!viewSourceId} onOpenChange={(open) => !open && setViewSourceId(null)}>
-        <SheetContent side="right" className="w-full sm:max-w-md bg-card overflow-y-auto no-scrollbar pt-10">
-          <SheetHeader className="mb-6">
+        <SheetContent side="bottom" className="w-full h-[85vh] rounded-t-[2.5rem] bg-card overflow-y-auto no-scrollbar pt-12 border-none">
+          <div className="w-12 h-1.5 bg-muted/40 rounded-full mx-auto absolute top-4 left-1/2 -translate-x-1/2" />
+          <SheetHeader className="mb-6 px-4">
             <div className="flex items-center gap-4 mb-4">
                <div className={cn(
                   "w-14 h-14 rounded-2xl flex items-center justify-center shadow-2xl",

@@ -2,7 +2,8 @@ import type {
   Category as PrismaCategory, 
   Transaction as PrismaTransaction, 
   Source as PrismaSource,
-  Person as PrismaPerson
+  Person as PrismaPerson,
+  Investment as PrismaInvestment
 } from "@prisma/client";
 
 export type TransactionType = "INCOME" | "EXPENSE" | "INVESTMENT" | "TRANSFER";
@@ -23,6 +24,7 @@ export const SourceType = {
 
 export type Category = Omit<PrismaCategory, "type"> & { type: TransactionType };
 export type Person = PrismaPerson;
+export type Investment = PrismaInvestment;
 
 export type Loan = {
   id: string;
@@ -48,6 +50,7 @@ export type Transaction = Omit<PrismaTransaction, "type"> & {
   toSourceId: string | null;
   personId: string | null;
   loanId: string | null;
+  investmentId: string | null;
 };
 
 export type FullTransaction = Transaction & { 
@@ -56,4 +59,5 @@ export type FullTransaction = Transaction & {
   toSource: Source | null;
   person: Person | null;
   loan: Loan | null;
+  investment: Investment | null;
 };

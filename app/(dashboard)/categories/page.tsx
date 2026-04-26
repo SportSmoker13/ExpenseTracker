@@ -5,7 +5,9 @@ import { CategoryManager } from "@/components/categories/CategoryManager";
 import { SourceManager } from "@/components/sources/SourceManager";
 import { PersonManager } from "@/components/people/PersonManager";
 import { LoanManager } from "@/components/loans/LoanManager";
+import { InvestmentManager } from "@/components/investments/InvestmentManager";
 import { getLoans } from "@/app/actions/loanActions";
+import { getInvestments } from "@/app/actions/investmentActions";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -14,11 +16,12 @@ export const metadata: Metadata = {
 };
 
 export default async function CategoriesPage() {
-  const [categories, sources, people, loans] = await Promise.all([
+  const [categories, sources, people, loans, investments] = await Promise.all([
     getCategories(),
     getSourceSummaries(),
     getPeople(),
     getLoans(),
+    getInvestments(),
   ]);
 
   return (
@@ -52,6 +55,17 @@ export default async function CategoriesPage() {
           <h2 className="text-sm font-black tracking-tight uppercase opacity-80">People</h2>
         </div>
         <PersonManager people={people} categories={categories} sources={sources} />
+      </section>
+
+      <div className="h-px w-full bg-border/20" />
+
+      {/* Investments Section */}
+      <section className="space-y-1 animate-in fade-in slide-in-from-bottom-4 duration-1000 px-1">
+        <div className="flex items-center gap-2 mb-0.5">
+          <div className="h-4 w-1 rounded-full bg-blue-600 shadow-[0_0_10px_rgba(37,99,235,0.5)]" />
+          <h2 className="text-sm font-black tracking-tight uppercase opacity-80">Investments</h2>
+        </div>
+        <InvestmentManager investments={investments as any} sources={sources} categories={categories} />
       </section>
 
       <div className="h-px w-full bg-border/20" />

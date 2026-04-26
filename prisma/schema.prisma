@@ -21,24 +21,26 @@ model Category {
 }
 
 model Transaction {
-  id          String          @id @default(cuid())
-  userId      String
-  amount      Float
-  date        DateTime        @default(now())
-  type        TransactionType
-  description String?
-  categoryId  String?
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-  sourceId    String?
-  personId    String?
-  toSourceId  String?
-  loanId      String?
-  category    Category?       @relation(fields: [categoryId], references: [id])
-  person      Person?         @relation(fields: [personId], references: [id])
-  loan        Loan?           @relation(fields: [loanId], references: [id])
-  source      Source?         @relation("FromSource", fields: [sourceId], references: [id])
-  toSource    Source?         @relation("ToSource", fields: [toSourceId], references: [id])
+  id           String          @id @default(cuid())
+  userId       String
+  amount       Float
+  date         DateTime        @default(now())
+  type         TransactionType
+  description  String?
+  categoryId   String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  sourceId     String?
+  personId     String?
+  toSourceId   String?
+  loanId       String?
+  investmentId String?
+  category     Category?       @relation(fields: [categoryId], references: [id])
+  person       Person?         @relation(fields: [personId], references: [id])
+  loan         Loan?           @relation(fields: [loanId], references: [id])
+  investment   Investment?     @relation(fields: [investmentId], references: [id])
+  source       Source?         @relation("FromSource", fields: [sourceId], references: [id])
+  toSource     Source?         @relation("ToSource", fields: [toSourceId], references: [id])
 
   @@index([date])
   @@index([type])
@@ -71,6 +73,19 @@ model Loan {
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
   source       Source        @relation(fields: [sourceId], references: [id])
+  transactions Transaction[]
+
+  @@index([userId])
+}
+
+model Investment {
+  id           String        @id @default(cuid())
+  userId       String
+  name         String
+  type         String        @default("OTHER")
+  icon         String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
   transactions Transaction[]
 
   @@index([userId])

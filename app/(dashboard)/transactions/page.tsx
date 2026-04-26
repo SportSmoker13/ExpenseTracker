@@ -3,6 +3,7 @@ import { getCategories } from "@/app/actions/categoryActions";
 import { getSources } from "@/app/actions/sourceActions";
 import { getPeople } from "@/app/actions/personActions";
 import { getLoans } from "@/app/actions/loanActions";
+import { getInvestments } from "@/app/actions/investmentActions";
 import { TransactionTable } from "@/components/transactions/TransactionTable";
 import type { Metadata } from "next";
 
@@ -12,12 +13,13 @@ export const metadata: Metadata = {
 };
 
 export default async function TransactionsPage() {
-  const [{ transactions }, categories, sources, people, loans] = await Promise.all([
+  const [{ transactions }, categories, sources, people, loans, investments] = await Promise.all([
     getTransactions({ pageSize: 500 }),
     getCategories(),
     getSources(),
     getPeople(),
     getLoans(),
+    getInvestments(),
   ]);
 
   return (
@@ -32,6 +34,7 @@ export default async function TransactionsPage() {
         sources={sources}
         people={people}
         loans={loans as any}
+        investments={investments as any}
       />
     </div>
   );
