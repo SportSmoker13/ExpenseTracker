@@ -13,6 +13,8 @@ import {
   Moon,
   ChevronLeft,
   ChevronRight,
+  Wallet,
+  Settings,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -22,7 +24,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/transactions", label: "Transactions", icon: ArrowLeftRight },
-  { href: "/categories", label: "Categories", icon: Tag },
+  { href: "/wealth", label: "Wealth", icon: Wallet },
+  { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 interface SidebarProps {

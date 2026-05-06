@@ -31,7 +31,8 @@ export async function addSource(data: {
     data: { ...parsed, userId },
   });
 
-  revalidatePath("/sources");
+  revalidatePath("/wealth");
+  revalidatePath("/settings");
   revalidatePath("/");
   return { success: true, source };
 }
@@ -57,7 +58,8 @@ export async function deleteSource(id: string) {
   }
 
   await prisma.source.delete({ where: { id } });
-  revalidatePath("/categories");
+  revalidatePath("/wealth");
+  revalidatePath("/settings");
   return { success: true };
 }
 

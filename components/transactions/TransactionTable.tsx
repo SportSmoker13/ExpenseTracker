@@ -23,6 +23,8 @@ import type { DateRange } from "react-day-picker";
 
 // type FullTransaction is now imported from @/lib/types
 
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
+
 interface TransactionTableProps {
   transactions: FullTransaction[];
   categories: Category[];
@@ -30,6 +32,9 @@ interface TransactionTableProps {
   people: Person[];
   loans: Loan[];
   investments: any[];
+  total: number;
+  page: number;
+  pageSize: number;
 }
 
 function formatCurrency(amount: number) {
@@ -47,7 +52,10 @@ const typeConfig = {
   TRANSFER: { label: "Pay/Transfer", className: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
 };
 
-export function TransactionTable({ transactions, categories, sources, people, loans, investments }: TransactionTableProps) {
+export function TransactionTable({ transactions, categories, sources, people, loans, investments, total, page, pageSize }: TransactionTableProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [editTx, setEditTx] = useState<FullTransaction | null>(null);
   const [deleteTxId, setDeleteTxId] = useState<string | null>(null);
@@ -204,6 +212,42 @@ export function TransactionTable({ transactions, categories, sources, people, lo
               </div>
             );
           })}
+
+          {/* Pagination Controls */}
+          <div className="pt-6 pb-10 flex items-center justify-between gap-4 px-1">
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-xl h-10 px-4 text-[10px] font-black uppercase tracking-widest disabled:opacity-20"
+              disabled={page <= 1}
+              onClick={() => {
+                const params = new URLSearchParams(searchParams.toString());
+                params.set("page", (page - 1).toString());
+                router.push(`${pathname}?${params.toString()}`);
+              }}
+            >
+              Previous
+            </Button>
+            
+            <div className="flex flex-col items-center">
+              <span className="text-[10px] font-black uppercase tracking-widest opacity-40">Page</span>
+              <span className="text-sm font-black">{page} <span className="opacity-20">/</span> {Math.ceil(total / pageSize)}</span>
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-xl h-10 px-4 text-[10px] font-black uppercase tracking-widest disabled:opacity-20"
+              disabled={page >= Math.ceil(total / pageSize)}
+              onClick={() => {
+                const params = new URLSearchParams(searchParams.toString());
+                params.set("page", (page + 1).toString());
+                router.push(`${pathname}?${params.toString()}`);
+              }}
+            >
+              Next
+            </Button>
+          </div>
         </div>
       )}
 

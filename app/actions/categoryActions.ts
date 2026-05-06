@@ -33,7 +33,8 @@ export async function addCategory(data: {
     data: { ...parsed, userId },
   });
 
-  revalidatePath("/categories");
+  revalidatePath("/wealth");
+  revalidatePath("/settings");
   revalidatePath("/");
   return { success: true, category };
 }
@@ -59,7 +60,9 @@ export async function deleteCategory(id: string) {
   }
 
   await prisma.category.delete({ where: { id } });
-  revalidatePath("/categories");
+  revalidatePath("/wealth");
+  revalidatePath("/settings");
+  revalidatePath("/");
   return { success: true };
 }
 

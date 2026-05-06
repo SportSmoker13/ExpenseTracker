@@ -87,9 +87,9 @@ export function CategoryManager({ categories: initialCategories }: CategoryManag
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger
               id="add-category-btn"
-              className="flex items-center gap-2 h-12 px-6 rounded-2xl bg-primary text-primary-foreground text-xs font-black shadow-xl shadow-primary/20 active:scale-95 transition-all"
+              className="flex items-center gap-1.5 h-10 px-4 rounded-xl bg-primary text-primary-foreground text-[10px] font-black shadow-lg shadow-primary/20 active:scale-95 transition-all"
             >
-              <Plus className="w-5 h-5" /> CREATE
+              <Plus className="w-4 h-4" /> CREATE
             </DialogTrigger>
             <DialogContent className="sm:max-w-md rounded-[2.5rem] border-none bg-card/95 backdrop-blur-2xl">
               <DialogHeader>
@@ -182,30 +182,30 @@ export function CategoryManager({ categories: initialCategories }: CategoryManag
                 <p className="text-xs text-muted-foreground font-medium italic">No {typeConfig[type].label.toLowerCase()} categories created yet</p>
               </div>
             ) : (
-              <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar -mx-1 px-1">
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-2">
                 {grouped[type].map((cat) => (
                   <div
                     key={cat.id}
-                    className="flex-none w-36 flex flex-col items-center gap-3 p-5 rounded-[2.5rem] bg-card/40 border border-border/40 hover:border-primary/30 transition-all active:scale-[0.98] relative group overflow-hidden text-center shadow-sm"
+                    className="flex flex-col items-center gap-1.5 p-2 rounded-xl bg-card/40 border border-border/40 hover:border-primary/30 transition-all active:scale-[0.98] relative group overflow-hidden text-center shadow-sm"
                   >
                     <div
-                      className="w-12 h-12 rounded-[1.25rem] flex items-center justify-center text-2xl shadow-xl transition-transform group-hover:scale-110 group-hover:rotate-3"
+                      className="w-9 h-9 rounded-lg flex items-center justify-center text-lg shadow-sm transition-transform group-hover:scale-110"
                       style={{ backgroundColor: `${cat.colorCode}20` }}
                     >
                       {cat.icon ?? "📁"}
                     </div>
-                    <div className="space-y-1 w-full px-1">
-                      <p className="text-xs font-black tracking-tight truncate uppercase">{cat.name}</p>
+                    <div className="space-y-0.5 w-full px-0.5">
+                      <p className="text-[10px] font-black tracking-tight truncate uppercase leading-tight">{cat.name}</p>
                       <div className="flex justify-center">
-                        <div className="h-0.5 w-8 rounded-full shadow-lg" style={{ backgroundColor: cat.colorCode, boxShadow: `0 0 10px ${cat.colorCode}60` }} />
+                        <div className="h-0.5 w-4 rounded-full shadow-lg" style={{ backgroundColor: cat.colorCode, boxShadow: `0 0 6px ${cat.colorCode}60` }} />
                       </div>
                     </div>
                     
                     <button
                       onClick={() => setDeleteId(cat.id)}
-                      className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-full bg-destructive/10 text-destructive opacity-0 group-hover:opacity-100 transition-all active:scale-125"
+                      className="absolute top-1 right-1 w-5 h-5 flex items-center justify-center rounded-full bg-destructive/10 text-destructive opacity-0 group-hover:opacity-100 transition-all active:scale-125"
                     >
-                      <Trash2 className="w-3 h-3" />
+                      <Trash2 className="w-2.5 h-2.5" />
                     </button>
                   </div>
                 ))}

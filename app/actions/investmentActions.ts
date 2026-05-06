@@ -26,7 +26,8 @@ export async function addInvestment(data: { name: string, type?: string, icon?: 
     data: { ...parsed, userId },
   });
 
-  revalidatePath("/categories");
+  revalidatePath("/wealth");
+  revalidatePath("/settings");
   revalidatePath("/");
   return { success: true, investment };
 }

@@ -2,14 +2,12 @@
 
 import { useState, useTransition, useEffect } from "react";
 import type { Person, Category, Source } from "@/lib/types";
-import { Plus, Trash2, Loader2, UserPlus, Users, ArrowUpRight, ArrowDownLeft, History } from "lucide-react";
+import { Trash2, Loader2, Users, ArrowUpRight, ArrowDownLeft, History } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
-import { addPerson, deletePerson, getPersonTransactions } from "@/app/actions/personActions";
+import { deletePerson, getPersonTransactions } from "@/app/actions/personActions";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { NewTransactionSheet } from "@/components/transactions/NewTransactionSheet";
@@ -35,13 +33,11 @@ interface PersonManagerProps {
 
 export function PersonManager({ people: initialPeople, categories, sources, investments }: PersonManagerProps) {
   const [isPending, startTransition] = useTransition();
-  const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [viewPersonId, setViewPersonId] = useState<string | null>(null);
   const [settleOpen, setSettleOpen] = useState(false);
   const [history, setHistory] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
-  const [form, setForm] = useState({ name: "" });
 
   const viewPerson = initialPeople.find(p => p.id === viewPersonId);
 
@@ -56,22 +52,6 @@ export function PersonManager({ people: initialPeople, categories, sources, inve
     }
   }, [viewPersonId]);
 
-  const handleAdd = () => {
-    if (!form.name.trim()) {
-      toast.error("Name is required");
-      return;
-    }
-    startTransition(async () => {
-      try {
-        await addPerson(form);
-        toast.success("Person added!");
-        setDialogOpen(false);
-        setForm({ name: "" });
-      } catch (err) {
-        toast.error((err as Error).message);
-      }
-    });
-  };
 
   const handleDelete = (id: string) => {
     startTransition(async () => {
@@ -89,50 +69,6 @@ export function PersonManager({ people: initialPeople, categories, sources, inve
 
   return (
     <div className="space-y-3 animate-in fade-in duration-500">
-      {/* Premium Add Card */}
-      <div className="relative group overflow-hidden rounded-3xl bg-muted/20 p-[1px]">
-        <div className="bg-card/40 backdrop-blur-3xl p-4 rounded-3xl flex items-center justify-between gap-4">
-          <div className="space-y-0.5">
-            <h3 className="text-sm font-black tracking-tighter">Your Circle</h3>
-            <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-[0.2em] opacity-60">Lending & Borrowing</p>
-          </div>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger
-              id="add-person-btn"
-              className="flex items-center gap-2 h-10 px-4 rounded-2xl bg-orange-500 text-white text-[10px] font-black shadow-xl shadow-orange-500/20 active:scale-95 transition-all"
-            >
-              <UserPlus className="w-4 h-4" /> ADD
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md rounded-[2.5rem] border-none bg-card/95 backdrop-blur-2xl">
-              <DialogHeader>
-                <DialogTitle className="text-xl font-black">Add Person</DialogTitle>
-                <DialogDescription className="text-xs font-medium">Track money records with this person.</DialogDescription>
-              </DialogHeader>
-              <div className="space-y-5 py-4">
-                <div className="space-y-2">
-                  <Label className="text-[10px] font-black uppercase tracking-widest ml-1">Full Name</Label>
-                  <Input
-                    placeholder="e.g. Rahul Sharma"
-                    value={form.name}
-                    className="h-12 rounded-2xl bg-muted/30 border-none px-4 font-bold"
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  />
-                </div>
-              </div>
-              <DialogFooter className="flex flex-row gap-2 sm:flex-row sm:space-x-0">
-                <Button variant="ghost" className="flex-1 rounded-2xl h-12 font-bold border border-border/40" onClick={() => setDialogOpen(false)}>CANCEL</Button>
-                <Button
-                  onClick={handleAdd}
-                  disabled={isPending}
-                  className="flex-1 rounded-2xl h-12 bg-orange-500 text-white font-black shadow-lg shadow-orange-500/20"
-                >
-                  {isPending ? "OK..." : "SAVE"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </div>
 
       <div className="space-y-2">
         {initialPeople.length === 0 ? (
@@ -141,7 +77,7 @@ export function PersonManager({ people: initialPeople, categories, sources, inve
             <p className="text-sm text-muted-foreground font-medium">No one in your circle yet.</p>
           </div>
         ) : (
-          <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar -mx-1 px-1">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {initialPeople.map((person) => {
               const balance = person.balance;
               const isOwedToMe = balance > 0;
@@ -151,7 +87,7 @@ export function PersonManager({ people: initialPeople, categories, sources, inve
                 <div
                   key={person.id}
                   onClick={() => setViewPersonId(person.id)}
-                  className="flex-none w-40 flex flex-col items-center gap-2.5 p-4 rounded-[2.25rem] bg-card/40 border border-border/40 hover:border-orange-500/30 transition-all active:scale-[0.98] relative group overflow-hidden text-center shadow-sm cursor-pointer"
+                  className="flex flex-col items-center gap-2.5 p-4 rounded-[2.25rem] bg-card/40 border border-border/40 hover:border-orange-500/30 transition-all active:scale-[0.98] relative group overflow-hidden text-center shadow-sm cursor-pointer"
                 >
                   <div className={cn(
                     "w-11 h-11 rounded-[1.15rem] flex items-center justify-center text-xl shadow-xl transition-transform group-hover:scale-110",
@@ -172,7 +108,7 @@ export function PersonManager({ people: initialPeople, categories, sources, inve
                           )}>
                             ₹{formatCurrency(Math.abs(balance))}
                           </p>
-                          <p className="text-[7px] font-bold uppercase opacity-30 tracking-widest">
+                          <p className="text-[7px] font-bold uppercase opacity-30 tracking-widest leading-none">
                             {isOwedToMe ? "Owes You" : "You Owe"}
                           </p>
                         </div>

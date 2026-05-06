@@ -12,9 +12,13 @@ export const metadata: Metadata = {
   description: "View, filter, and export all your financial transactions.",
 };
 
-export default async function TransactionsPage() {
-  const [{ transactions }, categories, sources, people, loans, investments] = await Promise.all([
-    getTransactions({ pageSize: 500 }),
+export default async function TransactionsPage(props: { searchParams: Promise<{ page?: string }> }) {
+  const searchParams = await props.searchParams;
+  const page = Number(searchParams.page) || 1;
+  const pageSize = 50;
+
+  const [{ transactions, total }, categories, sources, people, loans, investments] = await Promise.all([
+    getTransactions({ page, pageSize }),
     getCategories(),
     getSources(),
     getPeople(),
@@ -35,6 +39,9 @@ export default async function TransactionsPage() {
         people={people}
         loans={loans as any}
         investments={investments as any}
+        total={total}
+        page={page}
+        pageSize={pageSize}
       />
     </div>
   );

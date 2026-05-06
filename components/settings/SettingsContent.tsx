@@ -12,8 +12,32 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { CategoryManager } from "@/components/categories/CategoryManager";
+import { SourceCreator } from "@/components/sources/SourceCreator";
+import { PersonCreator } from "@/components/people/PersonCreator";
+import { InvestmentCreator } from "@/components/investments/InvestmentCreator";
+import { LoanCreator } from "@/components/loans/LoanCreator";
+import { SourceManager } from "@/components/sources/SourceManager";
+import { PersonManager } from "@/components/people/PersonManager";
+import { InvestmentManager } from "@/components/investments/InvestmentManager";
+import { LoanManager } from "@/components/loans/LoanManager";
+import type { Category, Source, Person, Investment, Loan } from "@/lib/types";
 
-export default function SettingsPage({ userEmail }: { userEmail: string | undefined }) {
+export default function SettingsPage({ 
+  userEmail, 
+  categories,
+  sources,
+  people,
+  investments,
+  loans
+}: { 
+  userEmail: string | undefined, 
+  categories: Category[],
+  sources: Source[],
+  people: Person[],
+  investments: Investment[],
+  loans: Loan[]
+}) {
   const router = useRouter();
   const supabase = createClient();
   const [isPending, startTransition] = useTransition();
@@ -28,7 +52,7 @@ export default function SettingsPage({ userEmail }: { userEmail: string | undefi
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 pb-12">
+    <div className="max-w-4xl mx-auto space-y-8 pb-20">
       {/* Profile Section */}
       <Card className="border-border bg-card shadow-sm overflow-hidden">
         <div className="h-32 bg-gradient-to-r from-[oklch(0.55_0.22_280)] to-[oklch(0.45_0.2_300)] opacity-90" />
@@ -57,6 +81,53 @@ export default function SettingsPage({ userEmail }: { userEmail: string | undefi
           </div>
         </CardContent>
       </Card>
+
+      {/* Categories Management Section */}
+      <section className="space-y-4">
+        <div className="flex items-center gap-2 px-1">
+          <div className="h-4 w-1 rounded-full bg-primary shadow-[0_0_10px_oklch(0.65_0.22_280)]" />
+          <h2 className="text-sm font-black tracking-tight uppercase opacity-80">Financial Labels</h2>
+        </div>
+        <CategoryManager categories={categories} />
+      </section>
+
+      {/* Wealth Setup Section */}
+      <section className="space-y-6">
+        <div className="flex items-center gap-2 px-1">
+          <div className="h-4 w-1 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+          <h2 className="text-sm font-black tracking-tight uppercase opacity-80">Wealth Setup</h2>
+        </div>
+        
+        {/* Accounts */}
+        <div className="space-y-4">
+           <SourceCreator />
+           <SourceManager sources={sources} />
+        </div>
+
+        <div className="h-px bg-border/40 w-full" />
+
+        {/* People */}
+        <div className="space-y-4">
+           <PersonCreator />
+           <PersonManager people={people as any} categories={categories} sources={sources} investments={investments as any} />
+        </div>
+
+        <div className="h-px bg-border/40 w-full" />
+
+        {/* Investments */}
+        <div className="space-y-4">
+           <InvestmentCreator />
+           <InvestmentManager investments={investments as any} sources={sources} categories={categories} />
+        </div>
+
+        <div className="h-px bg-border/40 w-full" />
+
+        {/* Loans */}
+        <div className="space-y-4">
+           <LoanCreator sources={sources} />
+           <LoanManager loans={loans as any} sources={sources} categories={categories} investments={investments as any} />
+        </div>
+      </section>
 
       {/* Preferences Section */}
       <Card className="border-border bg-card shadow-sm">

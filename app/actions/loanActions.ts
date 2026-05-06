@@ -31,7 +31,8 @@ export async function addLoan(data: z.infer<typeof LoanSchema>) {
     },
   });
 
-  revalidatePath("/categories");
+  revalidatePath("/wealth");
+  revalidatePath("/settings");
   return { success: true, loan };
 }
 

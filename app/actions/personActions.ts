@@ -82,6 +82,7 @@ export async function deletePerson(id: string) {
   }
 
   await prisma.person.delete({ where: { id } });
-  revalidatePath("/categories");
+  revalidatePath("/wealth");
+  revalidatePath("/settings");
   return { success: true };
 }

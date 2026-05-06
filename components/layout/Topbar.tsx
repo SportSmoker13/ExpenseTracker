@@ -11,7 +11,8 @@ import type { Category, Source, Person, Loan, Investment } from "@/lib/types";
 const pageTitles: Record<string, string> = {
   "/": "Dashboard",
   "/transactions": "Transactions",
-  "/categories": "Categories",
+  "/wealth": "Wealth Management",
+  "/settings": "Settings",
 };
 
 interface TopbarProps {
